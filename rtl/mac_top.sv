@@ -65,10 +65,8 @@ module mac_top
   mac_engine i_engine (
     .clk_i            ( clk_i          ),
     .rst_ni           ( rst_ni         ),
-    .test_mode_i      ( test_mode_i    ),
     .a_i              ( a.sink         ),
     .b_i              ( b.sink         ),
-    .c_i              ( c.sink         ),
     .d_o              ( d.source       ),
     .ctrl_i           ( engine_ctrl    ),
     .flags_o          ( engine_flags   )
