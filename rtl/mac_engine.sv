@@ -34,48 +34,135 @@ module mac_engine
 
   logic unsigned [$clog2(MAC_CNT_LEN):0] cnt;
   logic unsigned [$clog2(MAC_CNT_LEN):0] r_cnt;
-  logic signed [127:0] r_a;
-  logic               r_a_valid;
-  logic               r_a_ready;
+  logic signed [127:0] r_word;
+  logic signed [127:0] r_key;
+  logic signed [127:0] aes_out;
+  logic signed [127:0] r_aes;
+  logic               r_word_valid;
+  logic               r_word_ready;
+  logic               r_key_valid;
+  logic               r_key_ready;
+  logic               r_aes_valid;
+  logic               r_aes_ready;
+  logic               aes_valid;
+  logic               aes_ready;
+  logic               aes_start;
+  logic               aes_busy;
 
-  // r_a stores a_i
+  aes_cipher_top i_aes(
+    .clk (clk_i),
+    .rst (rst_ni),
+    .ld  (aes_start),
+    .done(aes_valid),
+    .key (r_key),
+    .text_in (r_word),
+    .text_out (aes_out)
+  );
+
+  // register value updates
   always_ff @(posedge clk_i or negedge rst_ni)
   begin : mult_pipe_data
     if(~rst_ni) begin
-      r_a <= '0;
+      r_word <= '0;
+      r_key  <= '0;
+      r_aes  <= '0;
     end
     else if (ctrl_i.clear) begin
-      r_a <= '0;
+      r_word <= '0;
+      r_key  <= '0;
+      r_aes  <= '0;
     end
     else if (ctrl_i.enable) begin
-      // r_a value is updated if there is a valid handshake at its input
+      // updates at valid handshake at input
       if (a_i.valid & a_i.ready) begin
-        r_a <= $signed(a_i.data);
+        r_word <= $signed(a_i.data);
+      end
+      if (b_i.valid & b_i.ready) begin
+        r_key <= $signed(b_i.data);
+      end
+      if (aes_valid & aes_ready) begin
+        r_aes <= aes_out;
       end
     end
   end
 
-  // r_a is valid following a valid handshake
+  // r_word is valid following a valid handshake
   always_ff @(posedge clk_i or negedge rst_ni)
-  begin : mult_pipe_valid
+  begin : r_word_val
     if(~rst_ni) begin
-      r_a_valid <= '0;
+      r_word_valid <= '0;
     end
     else if (ctrl_i.clear) begin
-      r_a_valid <= '0;
+      r_word_valid <= '0;
     end
     else if (ctrl_i.enable) begin
-      // r_a_valid is re-evaluated after a valid handshake or in transition to 1
-      if ((a_i.valid) | (r_a_valid & r_a_ready)) begin
-        r_a_valid <= a_i.valid;
+      // r_word_valid is re-evaluated after a valid handshake or in transition to 1
+      if ((a_i.valid) | (r_word_valid & r_word_ready)) begin
+        r_word_valid <= a_i.valid;
+      end
+    end
+  end
+
+  // r_key is valid following a valid handshake
+  always_ff @(posedge clk_i or negedge rst_ni)
+  begin : r_key_val
+    if(~rst_ni) begin
+      r_key_valid <= '0;
+    end
+    else if (ctrl_i.clear) begin
+      r_key_valid <= '0;
+    end
+    else if (ctrl_i.enable) begin
+      // r_word_valid is re-evaluated after a valid handshake or in transition to 1
+      if ((b_i.valid) | (r_key_valid & r_key_ready)) begin
+        r_key_valid <= b_i.valid;
+      end
+    end
+  end
+
+  assign aes_start = r_word_valid & r_key_valid & (~aes_busy);
+
+  // r_aes is valid following a valid handshake
+  always_ff @(posedge clk_i or negedge rst_ni)
+  begin : proc_aes_busy
+    if(~rst_ni) begin
+      aes_busy <= '0;
+    end
+    else if (ctrl_i.clear) begin
+      aes_busy <= '0;
+    end
+    else if (ctrl_i.enable) begin
+      // r_word_valid is re-evaluated after a valid handshake or in transition to 1
+      if (aes_start) begin
+        aes_busy <= '1;
+      end
+      if (aes_valid) begin
+        aes_busy <= '0;
+      end
+    end
+  end
+
+  // r_aes is valid following a valid handshake
+  always_ff @(posedge clk_i or negedge rst_ni)
+  begin : r_aes_val
+    if(~rst_ni) begin
+      r_aes_valid <= '0;
+    end
+    else if (ctrl_i.clear) begin
+      r_aes_valid <= '0;
+    end
+    else if (ctrl_i.enable) begin
+      // r_word_valid is re-evaluated after a valid handshake or in transition to 1
+      if ((aes_valid) | (r_aes_valid & r_aes_ready)) begin
+        r_aes_valid <= aes_valid;
       end
     end
   end
 
   always_comb
   begin
-    d_o.data  = $signed(r_a);
-    d_o.valid = ctrl_i.enable & r_a_valid;
+    d_o.data  = r_aes[31:0];//32'hffffffff; //$signed(r_word);
+    d_o.valid = ctrl_i.enable & aes_valid;//r_word_valid;
     d_o.strb  = '1; // for now, strb is always '1
   end
 
@@ -97,22 +184,34 @@ module mac_engine
       r_cnt <= '0;
     end
     else if(ctrl_i.enable) begin
-      if ((ctrl_i.start == 1'b1) || ((r_cnt > 0) && (r_cnt < ctrl_i.len) && (r_a_valid & r_a_ready == 1'b1))) begin
+      if ((ctrl_i.start == 1'b1) || ((r_cnt > 0) && (r_cnt < ctrl_i.len) && (r_word_valid & r_word_ready == 1'b1))) begin
         r_cnt <= cnt;
       end
     end
   end
 
   assign flags_o.cnt = r_cnt;
-  assign flags_o.acc_valid = r_a_valid;
+  assign flags_o.acc_valid = r_aes_valid;
 
-  // accumulator accepts new value from multiplier when
-  //   1) output is ready or r_a is invalid (if in simple multiplication mode)
-  //   2) r_acc is ready or r_a is invalid (if in scalar product mode)
-  assign r_a_ready = d_o.ready  | ~r_a_valid;
+  // Ready signals have to be propagated backwards through pipeline stages (combinationally).
+  // To avoid deadlocks, the following rules have to be followed:
+  //  1) transition of ready CAN depend on the current state of valid
+  //  2) transition of valid CANNOT depend on the current state of ready
+  //  3) transition 1->0 of valid MUST depend on (previous) ready (i.e., once the valid goes
+  //     to 1 it cannot go back to 0 until there is a valid handshake)
+  // In the following:
+  // R_valid & R_ready denominate the handshake at the *output* (Q port) of pipe register R
 
-  // multiplier accepts new value from a_i/b_i when r_a is ready and both a_i/b_i are valid, or when both a_i/b_i are invalid
-  assign a_i.ready = (r_a_ready & a_i.valid & b_i.valid) | (~a_i.valid & ~b_i.valid);
-  assign b_i.ready = (r_a_ready & a_i.valid & b_i.valid) | (~a_i.valid & ~b_i.valid);
+  assign a_i.ready = (r_word_ready & a_i.valid & b_i.valid) | (~a_i.valid & ~b_i.valid);
+  assign b_i.ready = (r_key_ready & a_i.valid  & b_i.valid) | (~a_i.valid & ~b_i.valid);
 
+  // aes accepts if output register free and AES core not busy
+  assign r_word_ready = (aes_ready & (~aes_busy | ~aes_start));
+  assign r_key_ready = (aes_ready & (~aes_busy | ~aes_start));
+
+  // aes reg accepts if output ready or nothing useful in register
+  assign aes_ready =  r_aes_ready | (~r_aes_valid);
+
+  assign r_aes_ready = d_o.ready;
+  
 endmodule // mac_engine

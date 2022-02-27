@@ -52,6 +52,11 @@ module mac_ctrl
   logic unsigned [15:0] static_reg_shift;
   logic static_reg_simplemul;
 
+  logic [4:0][31:0] offs;
+  logic valid_flag;
+  logic done_flag;
+  logic enable_flag;
+
   uloop_bytecode_t [31:0] uloop_bytecode;
   uloop_code_t uloop_code;
   ctrl_uloop_t   uloop_ctrl;
@@ -125,6 +130,11 @@ module mac_ctrl
     .uloop_code_i     ( uloop_code           ),
     .registers_read_i ( uloop_registers_read )
   );
+
+  assign offs[MAC_UCODE_A_OFFS] = 32'b0;
+  assign offs[MAC_UCODE_B_OFFS] = 32'b0;
+  assign offs[MAC_UCODE_C_OFFS] = 32'b0;
+  assign offs[MAC_UCODE_D_OFFS] = 32'b0;
 
   /* Main FSM */
   mac_fsm i_fsm (
