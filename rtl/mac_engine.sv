@@ -122,11 +122,11 @@ module mac_engine
     end
     else if (ctrl_i.enable) begin
       // updates at valid handshake at input
-      if (word_valid & word_ready) begin //(a_i.valid & a_i.ready) begin
-        r_word <= word; // $signed(a_i.data);
+      if (word_valid & word_ready) begin
+        r_word <= word;
       end
-      if (key_valid & key_ready) begin //(b_i.valid & b_i.ready) begin
-        r_key <= key; //$signed(b_i.data);
+      if (key_valid & key_ready) begin
+        r_key <= key;
       end
       if (aes_valid & aes_ready) begin
         r_aes <= aes_out;
@@ -145,8 +145,8 @@ module mac_engine
     end
     else if (ctrl_i.enable) begin
       // r_word_valid is re-evaluated after a valid handshake or in transition to 1
-      if ((word_valid & word_ready) | aes_start) begin // ((a_i.valid) | (r_word_valid & r_word_ready)) begin
-        r_word_valid <= word_valid; //a_i.valid;
+      if ((word_valid & word_ready) | aes_start) begin
+        r_word_valid <= word_valid;
       end
     end
   end
@@ -162,8 +162,8 @@ module mac_engine
     end
     else if (ctrl_i.enable) begin
       // r_word_valid is re-evaluated after a valid handshake or in transition to 1
-      if ((key_valid & key_ready) | aes_start) begin // ((b_i.valid) | (r_key_valid & r_key_ready)) begin
-        r_key_valid <= key_valid; //b_i.valid;
+      if ((key_valid & key_ready) | aes_start) begin
+        r_key_valid <= key_valid;
       end
     end
   end
@@ -209,7 +209,7 @@ module mac_engine
 
   always_comb
   begin
-    d_o.data  = $signed(out_word); // $signed(r_aes[31:0]);
+    d_o.data  = $signed(out_word);
     d_o.valid = ctrl_i.enable & out_valid;
     d_o.strb  = '1; // for now, strb is always '1
   end
@@ -250,9 +250,7 @@ module mac_engine
   // In the following:
   // R_valid & R_ready denominate the handshake at the *output* (Q port) of pipe register R
 
-  //assign a_i.ready = (r_word_ready & a_i.valid & b_i.valid) | (~a_i.valid & ~b_i.valid);
   assign word_ready = (r_word_ready & word_valid & key_valid) | (~word_valid & ~key_valid);
-  //assign b_i.ready = (r_key_ready & a_i.valid  & b_i.valid) | (~a_i.valid & ~b_i.valid);
   assign key_ready = (r_key_ready & word_valid  & key_valid) | (~word_valid & ~key_valid);
 
   // aes accepts if output register free and AES core not busy
@@ -261,7 +259,5 @@ module mac_engine
 
   // aes reg accepts if output ready or nothing useful in register
   assign aes_ready =  r_aes_ready | (~r_aes_valid);
-
-  //assign r_aes_ready = d_o.ready;
   
 endmodule // mac_engine
