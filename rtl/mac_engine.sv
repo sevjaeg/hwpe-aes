@@ -145,7 +145,7 @@ module mac_engine
     end
     else if (ctrl_i.enable) begin
       // r_word_valid is re-evaluated after a valid handshake or in transition to 1
-      if ((word_valid) | (r_word_valid & r_word_ready)) begin // ((a_i.valid) | (r_word_valid & r_word_ready)) begin
+      if ((word_valid & word_ready) | aes_start) begin // ((a_i.valid) | (r_word_valid & r_word_ready)) begin
         r_word_valid <= word_valid; //a_i.valid;
       end
     end
@@ -162,7 +162,7 @@ module mac_engine
     end
     else if (ctrl_i.enable) begin
       // r_word_valid is re-evaluated after a valid handshake or in transition to 1
-      if ((key_valid) | (r_key_valid & r_key_ready)) begin // ((b_i.valid) | (r_key_valid & r_key_ready)) begin
+      if ((key_valid & key_ready) | aes_start) begin // ((b_i.valid) | (r_key_valid & r_key_ready)) begin
         r_key_valid <= key_valid; //b_i.valid;
       end
     end
@@ -201,7 +201,7 @@ module mac_engine
     end
     else if (ctrl_i.enable) begin
       // r_word_valid is re-evaluated after a valid handshake or in transition to 1
-      if ((aes_valid) | (r_aes_valid & r_aes_ready)) begin
+      if ((aes_valid & aes_ready) | (r_aes_valid & r_aes_ready)) begin
         r_aes_valid <= aes_valid;
       end
     end
@@ -239,7 +239,7 @@ module mac_engine
   end
 
   assign flags_o.cnt = r_cnt;
-  assign flags_o.acc_valid = r_aes_valid;
+  assign flags_o.acc_valid = out_valid;
 
   // Ready signals have to be propagated backwards through pipeline stages (combinationally).
   // To avoid deadlocks, the following rules have to be followed:
