@@ -35,36 +35,27 @@ module mac_engine
   logic unsigned [$clog2(MAC_CNT_LEN):0] cnt;
   logic unsigned [$clog2(MAC_CNT_LEN):0] r_cnt;
   logic signed [127:0] word;
-  logic signed [127:0] r_word;
   logic signed [127:0] key;
-  logic signed [127:0] r_key;
   logic signed [127:0] aes_out;
-  logic signed [127:0] r_aes;
   logic signed [31:0]  out_word;
   logic               word_valid;
   logic               word_ready;
   logic               key_valid;
   logic               key_ready;
-  logic               r_word_valid;
-  logic               r_word_ready;
-  logic               r_key_valid;
-  logic               r_key_ready;
-  logic               r_aes_valid;
-  logic               r_aes_ready;
   logic               aes_valid;
   logic               aes_ready;
   logic               aes_start;
   logic               aes_busy;
   logic               out_valid;
-
+  logic               out_ready;
 
   aes_cipher_top i_aes(
     .clk (clk_i),
     .rst (rst_ni),
     .ld  (aes_start),
     .done(aes_valid),
-    .key (r_key),
-    .text_in (r_word),
+    .key (key),
+    .text_in (word),
     .text_out (aes_out)
   );
 
@@ -99,78 +90,17 @@ module mac_engine
     .rst_ni (rst_ni),
     .clr_i  (ctrl_i.clear),
     .enable_i(ctrl_i.enable),
-    .valid_i (r_aes_valid),
-    .ready_i (d_o.ready),
-    .word_i (r_aes),
+    .valid_i (aes_valid),
+    .ready_i (out_ready),
+    .word_i (aes_out),
     .valid_o (out_valid),
-    .ready_o (r_aes_ready),
+    .ready_o (aes_ready),
     .word_o (out_word)
-);
+  );
 
-  // register value updates
-  always_ff @(posedge clk_i or negedge rst_ni)
-  begin : mult_pipe_data
-    if(~rst_ni) begin
-      r_word <= '0;
-      r_key  <= '0;
-      r_aes  <= '0;
-    end
-    else if (ctrl_i.clear) begin
-      r_word <= '0;
-      r_key  <= '0;
-      r_aes  <= '0;
-    end
-    else if (ctrl_i.enable) begin
-      // updates at valid handshake at input
-      if (word_valid & word_ready) begin
-        r_word <= word;
-      end
-      if (key_valid & key_ready) begin
-        r_key <= key;
-      end
-      if (aes_valid & aes_ready) begin
-        r_aes <= aes_out;
-      end
-    end
-  end
+  assign out_ready = d_o.ready;
+  assign aes_start = word_valid & word_ready & key_valid & key_ready;
 
-  // r_word is valid following a valid handshake
-  always_ff @(posedge clk_i or negedge rst_ni)
-  begin : r_word_val
-    if(~rst_ni) begin
-      r_word_valid <= '0;
-    end
-    else if (ctrl_i.clear) begin
-      r_word_valid <= '0;
-    end
-    else if (ctrl_i.enable) begin
-      // r_word_valid is re-evaluated after a valid handshake or in transition to 1
-      if ((word_valid & word_ready) | aes_start) begin
-        r_word_valid <= word_valid;
-      end
-    end
-  end
-
-  // r_key is valid following a valid handshake
-  always_ff @(posedge clk_i or negedge rst_ni)
-  begin : r_key_val
-    if(~rst_ni) begin
-      r_key_valid <= '0;
-    end
-    else if (ctrl_i.clear) begin
-      r_key_valid <= '0;
-    end
-    else if (ctrl_i.enable) begin
-      // r_word_valid is re-evaluated after a valid handshake or in transition to 1
-      if ((key_valid & key_ready) | aes_start) begin
-        r_key_valid <= key_valid;
-      end
-    end
-  end
-
-  assign aes_start = r_word_valid & r_word_ready & r_key_valid & r_key_ready;
-
-  // r_aes is valid following a valid handshake
   always_ff @(posedge clk_i or negedge rst_ni)
   begin : proc_aes_busy
     if(~rst_ni) begin
@@ -180,29 +110,12 @@ module mac_engine
       aes_busy <= '0;
     end
     else if (ctrl_i.enable) begin
-      // r_word_valid is re-evaluated after a valid handshake or in transition to 1
+      // word_valid is re-evaluated after a valid handshake or in transition to 1
       if (aes_start) begin
         aes_busy <= '1;
       end
       if (aes_valid) begin
         aes_busy <= '0;
-      end
-    end
-  end
-
-  // r_aes is valid following a valid handshake
-  always_ff @(posedge clk_i or negedge rst_ni)
-  begin : r_aes_val
-    if(~rst_ni) begin
-      r_aes_valid <= '0;
-    end
-    else if (ctrl_i.clear) begin
-      r_aes_valid <= '0;
-    end
-    else if (ctrl_i.enable) begin
-      // r_word_valid is re-evaluated after a valid handshake or in transition to 1
-      if ((aes_valid & aes_ready) | (r_aes_valid & r_aes_ready)) begin
-        r_aes_valid <= aes_valid;
       end
     end
   end
@@ -250,14 +163,7 @@ module mac_engine
   // In the following:
   // R_valid & R_ready denominate the handshake at the *output* (Q port) of pipe register R
 
-  assign word_ready = (r_word_ready & word_valid & key_valid) | (~word_valid & ~key_valid);
-  assign key_ready = (r_key_ready & word_valid  & key_valid) | (~word_valid & ~key_valid);
-
-  // aes accepts if output register free and AES core not busy
-  assign r_word_ready = (aes_ready & ~(aes_busy));  // TODO check
-  assign r_key_ready = (aes_ready & ~(aes_busy));  // TODO check
-
-  // aes reg accepts if output ready or nothing useful in register
-  assign aes_ready =  r_aes_ready | (~r_aes_valid);
+  assign word_ready = !aes_busy & word_valid & key_valid;
+  assign key_ready = !aes_busy & word_valid & key_valid;
   
 endmodule // mac_engine
