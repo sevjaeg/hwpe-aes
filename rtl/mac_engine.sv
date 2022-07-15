@@ -35,19 +35,25 @@ module mac_engine
   logic unsigned [$clog2(MAC_CNT_LEN):0] cnt;
   logic unsigned [$clog2(MAC_CNT_LEN):0] r_cnt;
   logic signed [127:0] word;
+  logic signed [127:0] word_chained;
   logic signed [127:0] key;
   logic signed [127:0] aes_out;
+  logic signed [127:0] r_aes_out;
   logic signed [31:0]  out_word;
-  logic               word_valid;
+  logic               word_valid, word_chained_valid;
   logic               word_ready;
   logic               key_valid;
   logic               key_ready;
   logic               aes_valid;
+  logic               aes_reg_valid;
   logic               aes_ready;
   logic               aes_start;
   logic               aes_busy;
   logic               out_valid;
   logic               out_ready;
+
+  // CBC initialisation vector
+  logic signed [127:0] iv = 128'h000102030405060708090a0b0c0d0e0f;
 
   aes_cipher_top i_aes(
     .clk (clk_i),
@@ -55,7 +61,7 @@ module mac_engine
     .ld  (aes_start),
     .done(aes_valid),
     .key (key),
-    .text_in (word),
+    .text_in (word_chained),
     .text_out (aes_out)
   );
 
@@ -99,7 +105,33 @@ module mac_engine
   );
 
   assign out_ready = d_o.ready;
-  assign aes_start = word_valid & word_ready & key_valid & key_ready;
+
+  assign aes_start = word_chained_valid & word_ready & key_valid & key_ready;
+
+  assign word_chained = r_aes_out ^ word;
+  assign word_chained_valid = word_valid & aes_reg_valid;
+
+  always_ff @(posedge clk_i or negedge rst_ni)
+  begin : proc_r_aes_out
+    if(~rst_ni) begin
+      r_aes_out <=  iv;
+      aes_reg_valid <= 1'b1;
+    end
+    else begin
+      if (aes_valid) begin
+        r_aes_out <= aes_out;
+        aes_reg_valid <= 1'b1;
+      end
+      else if(aes_start) begin
+        r_aes_out <= r_aes_out;
+        aes_reg_valid <= 1'b0;
+      end
+      else begin
+        r_aes_out <= r_aes_out;
+        aes_reg_valid <= aes_reg_valid;
+      end
+    end
+  end
 
   always_ff @(posedge clk_i or negedge rst_ni)
   begin : proc_aes_busy
