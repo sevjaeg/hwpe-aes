@@ -1,0 +1,3 @@
+/kits/tsmc/65nm/GP_stclib/10-track/tcbn65gplushpbwp-set/tcbn65gplushpbwp_140a_FE/TSMCHOME/digital/Front_End/verilog/tcbn65gplushpbwp_140a/tcbn65gplushpbwp.v
+../../../impl/out/aes_cipher_top_synth.v
+../bench/verilog/test_bench_cipher.v
