@@ -2,6 +2,7 @@
 
 clean:
 	rm -f genus.*
+	rm -f *.tstamp
 	rm -rf fv logs out reports
 
 synth:

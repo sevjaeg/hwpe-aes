@@ -3,4 +3,6 @@ fv/
 out/
 logs/
 reports/
+.cadence/
+*.tstamp
 
