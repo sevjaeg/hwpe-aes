@@ -1,8 +1,10 @@
 genus.*
+innovus.*
 fv/
 out/
 logs/
 reports/
 .cadence/
 *.tstamp
-
+timingReports/
+checkDesign/
