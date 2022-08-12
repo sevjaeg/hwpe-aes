@@ -8,3 +8,6 @@ reports/
 *.tstamp
 timingReports/
 checkDesign/
+
+*.old
+*.rpt

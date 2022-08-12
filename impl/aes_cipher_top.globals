@@ -20,7 +20,7 @@ set enable_ilm_dual_view_gui_and_attribute 1
 set enc_enable_print_mode_command_reset_options 1
 set init_design_settop 0
 set init_lef_file {/kits/tsmc/65nm/GP_stclib/10-track/tcbn65gplushpbwp-set/tcbn65gplushpbwp_140a_FE/TSMCHOME/digital/Back_End/lef/tcbn65gplushpbwp_140a/lef/tcbn65gplushpbwp_7lmT1.lef}
-set init_mmmc_file {aes_cipher_top_mmmc2.tcl}
+set init_mmmc_file {aes_cipher_top_mmmc.tcl}
 set init_pwr_net {VDD}
 set init_gnd_net {VSS}
 set init_top_cell {aes_cipher_top}
@@ -32,7 +32,6 @@ set pegDetailResScaleFactor 1
 set pegEnableDualViewForTQuantus 1
 set report_inactive_arcs_format {from to when arc_type sense reason}
 set spgUnflattenIlmInCheckPlace 2
-set timing_enable_default_delay_arc 1
 set init_verilog_tolerate_port_mismatch 0
 set load_netlist_ignore_undefined_cell 1
 

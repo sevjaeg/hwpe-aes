@@ -187,7 +187,7 @@ write_snapshot -outdir $_REPORTS_PATH -tag final
 report_summary -outdir $_REPORTS_PATH
 write_hdl  > ${_OUTPUTS_PATH}/${DESIGN}_synth.v
 ## write_script > ${_OUTPUTS_PATH}/${DESIGN}_m.script
-write_sdc > ${_OUTPUTS_PATH}/${DESIGN}_m.sdc
+write_sdc > ${_OUTPUTS_PATH}/${DESIGN}.sdc
 
 
 #################################
@@ -204,7 +204,7 @@ puts "============================"
 puts "Synthesis Finished ........."
 puts "============================"
 
-file copy [get_attribute stdout_log /] ${_LOG_PATH}/.
+report timing
 
 # gui_show
 # quit
