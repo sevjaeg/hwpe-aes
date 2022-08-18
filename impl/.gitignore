@@ -11,3 +11,4 @@ checkDesign/
 
 *.old
 *.rpt
+.*.timestamp
