@@ -1,14 +1,19 @@
 genus.*
 innovus.*
-fv/
+
 out/
 logs/
 reports/
 .cadence/
+
+.*.timestamp
+
+# Stuff to understand/get rid of
 *.tstamp
 timingReports/
 checkDesign/
-
+fv/
+genus2invs*
 *.old
 *.rpt
-.*.timestamp
+mp_data

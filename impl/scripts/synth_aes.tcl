@@ -21,9 +21,7 @@ set_db script_search_path scripts
 set_db init_hdl_search_path /home/sjaeger/pulpissimo/ips/hwpe-mac-engine/rtl
 
 ##Default undriven/unconnected setting is 'none'.  
-##set_attribute hdl_unconnected_input_port_value 0 | 1 | x | none /
-##set_attribute hdl_undriven_output_port_value   0 | 1 | x | none /
-##set_attribute hdl_undriven_signal_value        0 | 1 | x | none /
+##set_db / .hdl_unconnected_value 0 | 1 | x | none
 
 set_db hdl_error_on_blackbox 1
 set_db hdl_error_on_latch 1
@@ -155,6 +153,10 @@ foreach cg [vfind / -cost_group *] {
 
 report_dp > $_REPORTS_PATH/${DESIGN}_datapath_incr.rpt
 report_messages > $_REPORTS_PATH/${DESIGN}_messages.rpt
+report_timing > $_REPORTS_PATH/${DESIGN}_timing.rpt
+report_area > $_REPORTS_PATH/${DESIGN}_area.rpt
+report_gates > $_REPORTS_PATH/${DESIGN}_gates.rpt
+report_power > $_REPORTS_PATH/${DESIGN}_power.rpt
 write_snapshot -outdir $_REPORTS_PATH -tag final
 report_summary -directory $_REPORTS_PATH
 write_netlist  > ${_OUTPUTS_PATH}/${DESIGN}_synth.v
@@ -167,14 +169,4 @@ puts "============================"
 puts "Synthesis Finished ........."
 puts "============================"
 
-report_timing
-report_area
-report_gates
-report_power
-report_summary
-
-report_messages
-
 # gui_show
-# quit
-
