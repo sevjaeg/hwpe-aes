@@ -14,10 +14,10 @@ current_design aes_cipher_top
 
 set_operating_conditions _nominal_
 
-create_clock -name "clock" -period 2.5 -waveform {0.0 1.25} [get_ports clk]
+create_clock -name "clock" -period 2.2 -waveform {0.0 1.1} [get_ports clk]
 set_clock_transition 0.1 [get_clocks clock]
 set_clock_latency  0.1 [get_clocks clock]
-set_clock_uncertainty -setup 0.15 [get_clocks clock]
+set_clock_uncertainty -setup 0.05 [get_clocks clock]
 set_clock_uncertainty -hold 0.05 [get_clocks clock]
 
 set_load -pin_load -min 0.001 [get_ports done]
