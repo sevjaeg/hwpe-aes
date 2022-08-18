@@ -136,7 +136,7 @@ foreach cg [vfind / -cost_group *] {
 ##set_remove_assign_options -buffer_or_inverter <libcell> -design <design|subdesign> 
 ##set_attribute use_tiehilo_for_const <none|duplicate|unique> /
 set_db syn_opt_effort $MAP_OPT_EFF
-syn_opt -physical
+syn_opt
 write_snapshot -outdir $_REPORTS_PATH -tag syn_opt
 report_summary -directory $_REPORTS_PATH
 
