@@ -13,7 +13,6 @@ set DATE [clock format [clock seconds] -format "%b%d-%T"]
 set _OUTPUTS_PATH out
 set _REPORTS_PATH reports
 set _LOG_PATH logs
-##set ET_WORKDIR <ET work directory>
 
 set_db init_lib_search_path /kits/tsmc/65nm/GP_stclib/10-track/tcbn65gplushpbwp-set/tcbn65gplushpbwp_140a_FE/TSMCHOME/digital/Front_End/timing_power_noise/NLDM/tcbn65gplushpbwp_140a/
 set_db script_search_path scripts
@@ -32,19 +31,9 @@ set_db information_level 9
 ## Library setup
 ###############################################################
 
-# Read either MMMC or library
-
 read_mmmc aes_mmmc.tcl
 
-# read_libs tcbn65gplushpbwpwc.lib
 set_db lef_library /kits/tsmc/65nm/GP_stclib/10-track/tcbn65gplushpbwp-set/tcbn65gplushpbwp_140a_FE/TSMCHOME/digital/Back_End/lef/tcbn65gplushpbwp_140a/lef/tcbn65gplushpbwp_6lmT1.lef
-
-## Provide either cap_table_file or the qrc_tech_file
-# set_attribute cap_table_file /kits/tsmc/65nm/GP_stclib/10-track/tcbn65gplushpbwp-set/tcbn65gplushpbwp_140a_FE/TSMCHOME/digital/Back_End/lef/tcbn65gplushpbwp_140a/techfiles/captable/cln65g+_1p06m+alrdl_rcworst_top1.captable /
-#set_attribute qrc_tech_file <file> /
-##generates <signal>_reg[<bit_width>] format
-#set_attribute hdl_array_naming_style %s\[%d\] /  
-##
 
 set_db lp_insert_clock_gating false
 
@@ -52,10 +41,7 @@ set_db lp_insert_clock_gating false
 ## Load Design
 ####################################################################
 
-read_hdl aes_sbox.v
-read_hdl aes_rcon.v
-read_hdl aes_key_expand_128.v
-read_hdl aes_cipher_top.v
+read_hdl aes_sbox.v aes_rcon.v aes_key_expand_128.v aes_cipher_top.v
 
 elaborate $DESIGN
 puts "Runtime & Memory after 'read_hdl'"
@@ -72,9 +58,6 @@ check_timing_intent -verbose
 ## Define cost groups (clock-clock, clock-output, input-clock, input-output)
 ###################################################################################
 
-## Uncomment to remove already existing costgroups before creating new ones.
-## rm [find /designs/* -cost_group *]
-
 if {[llength [all_registers]] > 0} { 
   define_cost_group -name I2C -design $DESIGN
   define_cost_group -name C2O -design $DESIGN
@@ -89,13 +72,6 @@ path_group -from [all_inputs]  -to [all_outputs] -group I2O -name I2O -view TSMC
 foreach cg [vfind / -cost_group *] {
   report_timing -group [list $cg] >> $_REPORTS_PATH/${DESIGN}_pretim.rpt
 }
-
-#### To turn off sequential merging on the design 
-#### uncomment & use the following attributes.
-##set_attribute optimize_merge_flops false /
-##set_attribute optimize_merge_latches false /
-#### For a particular instance use attribute 'optimize_merge_seqs' to turn off sequential merging.
-
 
 ####################################################################################################
 ## Synthesizing to generic 
@@ -124,8 +100,6 @@ report_dp > $_REPORTS_PATH/map/${DESIGN}_datapath.rpt
 foreach cg [vfind / -cost_group *] {
   report_timing -group [list $cg] >> $_REPORTS_PATH/${DESIGN}_pretim.rpt
 }
-
-## ungroup -threshold <value>
 
 #######################################################################################################
 ## Optimize Netlist
@@ -159,9 +133,11 @@ report_gates > $_REPORTS_PATH/${DESIGN}_gates.rpt
 report_power > $_REPORTS_PATH/${DESIGN}_power.rpt
 write_snapshot -outdir $_REPORTS_PATH -tag final
 report_summary -directory $_REPORTS_PATH
-write_netlist  > ${_OUTPUTS_PATH}/${DESIGN}_synth.v
-# write_sdc > ${_OUTPUTS_PATH}/${DESIGN}_m.sdc
 
+write_netlist  > ${_OUTPUTS_PATH}/${DESIGN}_synth.v
+write_design -innovus -base_name ${_OUTPUTS_PATH}/${DESIGN}
+
+# TODO create lec script
 
 puts "Final Runtime & Memory."
 time_info FINAL

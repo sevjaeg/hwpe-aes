@@ -3,7 +3,8 @@
 [ ] Add pins to netlist?
 
 Genus
+[ ] Script path issues?
 [ ] Review SDC file
 [x] No clock gating!
 [ ] Operating conditions for timing
-[ ] write_design (-innovus)
+[x] write_design (-innovus)
