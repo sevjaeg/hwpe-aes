@@ -1,10 +1,9 @@
+source scripts/common.tcl
+set DESIGN aes_cipher_top
+
 set_multi_cpu_usage -local_cpu 8
 
-set DESIGN aes_cipher_top
 set DATE [clock format [clock seconds] -format "%b%d-%T"] 
-set _OUTPUTS_PATH out
-set _REPORTS_PATH reports
-set _LOG_PATH logs
 
 set_db init_netlist_files ${_OUTPUTS_PATH}/${DESIGN}_synth.v
 set_db init_lef_files /kits/tsmc/65nm/GP_stclib/10-track/tcbn65gplushpbwp-set/tcbn65gplushpbwp_140a_FE/TSMCHOME/digital/Back_End/lef/tcbn65gplushpbwp_140a/lef/tcbn65gplushpbwp_6lmT1.lef
@@ -22,7 +21,9 @@ read_netlist ${_OUTPUTS_PATH}/${DESIGN}_synth.v -top aes_cipher_top
 
 init_design
 
-create_floorplan -site core10T -core_density_size 1.0 0.72 4.0 4.0 4.0 4.0
+create_floorplan -site core10T -core_density_size 1.0 0.75 4.0 4.0 4.0 4.0
+
+# set_db place_global_place_io_pins true
 
 set_db assign_pins_edit_in_batch true
 edit_pin -pin_width 0.1 -pin_depth 1.0 -fix_overlap 1 -unit micron -spread_direction clockwise -edge 0 -layer 3 -spread_type center -spacing 3 -pin {rst clk}
@@ -46,21 +47,20 @@ add_stripes -nets {VDD VSS} -layer M6 -direction vertical -width 1.5 -spacing 0.
 
 route_special -connect corePin -nets {VDD VSS} -layer_change_range {M1(1) M6(6)} -allow_jogging 0 -allow_layer_change 1
 
-# route_special -connect {block_pin pad_pin pad_ring core_pin floating_stripe} -layer_change_range { M1(1) M6(6) } -block_pin_target nearest_target -pad_pin_port_connect {all_port one_geom} -pad_pin_target nearest_target -core_pin_target first_after_row_end -floating_stripe_target {block_ring pad_ring ring stripe ring_pin block_pin followpin} -allow_jogging 0 -crossover_via_layer_range { M1(1) AP(7) } -nets { VDD VSS } -allow_layer_change 1 -block_pin use_lef -target_via_layer_range { M1(1) AP(7) }
+# yields IMPSP-9100, should be no problem
+set_db place_global_ignore_scan false
 
-# TODO fix IMPSP-9099
 place_opt_design
 
-check_place
+check_place ${_REPORTS_PATH}/${DESIGN}_layout_place.rpt
 
 create_clock_tree_spec
 
-# TODO fix IMPCCOPT-1361
 ccopt_design
 opt_design -post_cts -hold
 
 add_fillers -base_cells {FILL16HPBWP FILL1HPBWP FILL2HPBWP FILL32HPBWP FILL4HPBWP FILL64HPBWP FILL8HPBWP}
-check_drc
+check_drc -out_file ${_REPORTS_PATH}/${DESIGN}_layout_drc_prefix.rpt
 add_fillers -fix_drc
 
 set_db timing_analysis_type ocv
@@ -72,17 +72,30 @@ route_design
 
 opt_design -post_route -setup -hold
 
-check_connectivity
-check_drc
+# layer 7 not used
+check_metal_density -layer {M1 M2 M3 M4 M5 M6} -report ${_REPORTS_PATH}/${DESIGN}_layout_metal_prefill.rpt
+check_cut_density -layer {VIA1 VIA2 VIA3 VIA4 VIA5} -out_file ${_REPORTS_PATH}/${DESIGN}_layout_via_prefill.rpt
 
-# TODO fill
+set_via_fill  -layer {VIA1 VIA2 VIA3 VIA4 VIA5}
+set_metal_fill -layer M6 -active_spacing 1.0 -window_size 20.0 20.0 -window_step 10.0 10.0 -min_density 1 -max_density 90 -preferred_density 35
 
-check_metal_density
+# TODO via fill not working properly
+# TODO via density not in LEF file?
+add_via_fill -layer {VIA1 VIA2 VIA3 VIA4 VIA5} -modes all
+add_metal_fill -layers M6 -timing_aware sta
 
+# TODO fix connectivity issues
+check_connectivity -out_file ${_REPORTS_PATH}/${DESIGN}_layout_connectivity.rpt
+check_drc -out_file ${_REPORTS_PATH}/${DESIGN}_layout_drc.rpt
+
+check_metal_density -layer {M1 M2 M3 M4 M5 M6} -report ${_REPORTS_PATH}/${DESIGN}_layout_metal.rpt
+check_cut_density -layer {VIA1 VIA2 VIA3 VIA4 VIA5} -out_file ${_REPORTS_PATH}/${DESIGN}_layout_via.rpt
 
 report_timing -late > $_REPORTS_PATH/${DESIGN}_timing_layout.rpt
 report_timing -early > $_REPORTS_PATH/${DESIGN}_timing_layout_hold.rpt
 
-# TODO write_stream
+# TODO write sdf for post-layout simulation
+# TODO write_stream (GDS2)
+# write_stream ${_OUTPUTS_PATH}/${DESIGN}.gds
 
-# gui_show
+write_db -timing_graph ${_OUTPUTS_PATH}/${DESIGN}.dat

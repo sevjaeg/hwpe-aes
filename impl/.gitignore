@@ -8,7 +8,6 @@ reports/
 
 .*.timestamp
 
-# Stuff to understand/get rid of
 *.tstamp
 timingReports/
 checkDesign/

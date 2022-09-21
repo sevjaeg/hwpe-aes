@@ -1,12 +1,12 @@
 package:
-  name: hwpe-mac-engine
+  name: hwpe-aes
   authors:
+    - "Severin Jäger <severin.jaeger@tuwien.ac.at>"
     - "Francesco Conti <f.conti@unibo.it>"
 
 dependencies:
   hwpe-stream: { git: "https://github.com/pulp-platform/hwpe-stream.git", version: 1.6.3 }
   hwpe-ctrl:   { git: "https://github.com/pulp-platform/hwpe-ctrl.git", version: 1.6.1 }
-
 
 sources:
   - include_dirs:

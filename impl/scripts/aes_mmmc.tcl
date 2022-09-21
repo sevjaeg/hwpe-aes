@@ -5,11 +5,6 @@ create_library_set -name TSMC65G_ls_typ -timing {/kits/tsmc/65nm/GP_stclib/10-tr
 create_library_set -name TSMC65G_ls_slow -timing {/kits/tsmc/65nm/GP_stclib/10-track/tcbn65gplushpbwp-set/tcbn65gplushpbwp_140a_FE/TSMCHOME/digital/Front_End/timing_power_noise/NLDM/tcbn65gplushpbwp_140a/tcbn65gplushpbwpwc.lib}
 create_library_set -name TSMC65G_ls_fast -timing {/kits/tsmc/65nm/GP_stclib/10-track/tcbn65gplushpbwp-set/tcbn65gplushpbwp_140a_FE/TSMCHOME/digital/Front_End/timing_power_noise/NLDM/tcbn65gplushpbwp_140a/tcbn65gplushpbwpbc.lib}
 
-#create_opcond -name TSMC65G_op_slow -process 1 -voltage 0.9 -temperature 125
-#create_opcond -name TSMC65G_op_typ -process 1 -voltage 1.0 -temperature 25
-#create_opcond -name TSMC65G_op_fast -process 1 -voltage 1.1 -temperature 0
-
-# -opcond TSMC65G_op_slow
 create_timing_condition -name TSMC65G_tc_slow -library_sets {TSMC65G_ls_slow}
 create_timing_condition -name TSMC65G_tc_typ -library_sets {TSMC65G_ls_typ}
 create_timing_condition -name TSMC65G_tc_fast -library_sets {TSMC65G_ls_fast}

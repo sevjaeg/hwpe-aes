@@ -6,16 +6,15 @@ puts "Hostname : [info hostname]"
 ## Preset global variables and attributes
 ##############################################################################
 
+include scripts/common.tcl
 set DESIGN aes_cipher_top
+
 set GEN_EFF medium
 set MAP_OPT_EFF high
 set DATE [clock format [clock seconds] -format "%b%d-%T"] 
-set _OUTPUTS_PATH out
-set _REPORTS_PATH reports
-set _LOG_PATH logs
 
 set_db init_lib_search_path /kits/tsmc/65nm/GP_stclib/10-track/tcbn65gplushpbwp-set/tcbn65gplushpbwp_140a_FE/TSMCHOME/digital/Front_End/timing_power_noise/NLDM/tcbn65gplushpbwp_140a/
-set_db script_search_path scripts
+set_db script_search_path {. scripts}
 
 set_db init_hdl_search_path /home/sjaeger/pulpissimo/ips/hwpe-mac-engine/rtl
 
@@ -70,7 +69,7 @@ if {[llength [all_registers]] > 0} {
 define_cost_group -name I2O -design $DESIGN
 path_group -from [all_inputs]  -to [all_outputs] -group I2O -name I2O -view TSMC65G_av_slow
 foreach cg [vfind / -cost_group *] {
-  report_timing -group [list $cg] >> $_REPORTS_PATH/${DESIGN}_pretim.rpt
+  # report_timing -group [list $cg] >> $_REPORTS_PATH/${DESIGN}_pretim.rpt
 }
 
 ####################################################################################################
@@ -82,7 +81,6 @@ syn_generic
 puts "Runtime & Memory after 'syn_generic'"
 time_info GENERIC
 write_snapshot -outdir $_REPORTS_PATH -tag generic
-report_dp > $_REPORTS_PATH/generic/${DESIGN}_datapath.rpt
 report_summary -directory $_REPORTS_PATH
 
 ####################################################################################################
@@ -95,7 +93,6 @@ puts "Runtime & Memory after 'syn_map'"
 time_info MAPPED
 write_snapshot -outdir $_REPORTS_PATH -tag map
 report_summary -directory $_REPORTS_PATH
-report_dp > $_REPORTS_PATH/map/${DESIGN}_datapath.rpt
 
 foreach cg [vfind / -cost_group *] {
   report_timing -group [list $cg] >> $_REPORTS_PATH/${DESIGN}_pretim.rpt
@@ -111,7 +108,7 @@ foreach cg [vfind / -cost_group *] {
 ##set_attribute use_tiehilo_for_const <none|duplicate|unique> /
 set_db syn_opt_effort $MAP_OPT_EFF
 syn_opt
-write_snapshot -outdir $_REPORTS_PATH -tag syn_opt
+write_snapshot -outdir $_REPORTS_PATH -tag final
 report_summary -directory $_REPORTS_PATH
 
 puts "Runtime & Memory after 'syn_opt'"
@@ -122,27 +119,21 @@ foreach cg [vfind / -cost_group *] {
 }
 
 ######################################################################################################
-## write backend file set (verilog, SDC, config, etc.)
+## write backend file set (verilog, SDC, config, etc.) and reports
 ######################################################################################################
 
-report_dp > $_REPORTS_PATH/${DESIGN}_datapath_incr.rpt
 report_messages > $_REPORTS_PATH/${DESIGN}_messages.rpt
 report_timing > $_REPORTS_PATH/${DESIGN}_timing.rpt
 report_area > $_REPORTS_PATH/${DESIGN}_area.rpt
 report_gates > $_REPORTS_PATH/${DESIGN}_gates.rpt
 report_power > $_REPORTS_PATH/${DESIGN}_power.rpt
-write_snapshot -outdir $_REPORTS_PATH -tag final
-report_summary -directory $_REPORTS_PATH
+report_dp > $_REPORTS_PATH/${DESIGN}_datapath.rpt
 
 write_netlist  > ${_OUTPUTS_PATH}/${DESIGN}_synth.v
 write_design -innovus -base_name ${_OUTPUTS_PATH}/${DESIGN}
-
-# TODO create lec script
 
 puts "Final Runtime & Memory."
 time_info FINAL
 puts "============================"
 puts "Synthesis Finished ........."
 puts "============================"
-
-# gui_show

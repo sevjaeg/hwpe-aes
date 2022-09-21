@@ -1,22 +1,15 @@
-# ####################################################################
-
-#  Created by Genus(TM) Synthesis Solution 19.14-s108_1 on Mon Aug 01 17:38:51 CEST 2022
-
-# ####################################################################
-
 set sdc_version 2.0
 
 set_units -capacitance 1000fF
 set_units -time 1000ps
 
-# Set the current design
 current_design aes_cipher_top
 
 set_operating_conditions _nominal_
 
-create_clock -name "clock" -period 2.0 -waveform {0.0 1.1} [get_ports clk]
-set_clock_transition 0.1 [get_clocks clock]
-set_clock_latency  0.125 [get_clocks clock]
+create_clock -name "clock" -period 2.0 -waveform {0.0 1.0} [get_ports clk]
+set_clock_transition 0.075 [get_clocks clock]
+set_clock_latency  0.1 [get_clocks clock]
 set_clock_uncertainty 0.025 [get_clocks clock]
 
 set_load -pin_load -min 0.001 [get_ports done]
