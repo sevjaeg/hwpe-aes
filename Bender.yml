@@ -16,14 +16,21 @@ sources:
       # package. Files in level 1 only depend on files in level 0, files in level 2 on files in
       # levels 1 and 0, etc. Files within a level are ordered alphabetically.
       # Level 0
+      - rtl/aes_rcon.v
+      - rtl/aes_sbox.v
+      - rtl/byte_stacker.sv
+      - rtl/byte_unstacker.sv
       - rtl/mac_package.sv
       # Level 1
-      - rtl/mac_engine.sv
+      - rtl/aes_key_expand_128.v
       - rtl/mac_fsm.sv
       - rtl/mac_streamer.sv
       # Level 2
+      - rtl/aes_cipher_top.v
       - rtl/mac_ctrl.sv
       # Level 3
-      - rtl/mac_top.sv
+      - rtl/mac_engine.sv
       # Level 4
+      - rtl/mac_top.sv
+      # Level 5
       - wrap/mac_top_wrap.sv

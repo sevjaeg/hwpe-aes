@@ -38,18 +38,18 @@ begin : ff
             case(byte_cnt_r)
                 0: begin
                     byte_cnt_r <= 1;
-                    stack_r[127:96] <= word_i; 
-                    done_r <= '0;             
+                    stack_r[127:96] <= word_i;
+                    done_r <= '0;
                 end
                 1: begin
                     byte_cnt_r <= 2;
-                    stack_r[95:64] <= word_i;  
+                    stack_r[95:64] <= word_i;
                     done_r <= '0;
                 end
                 2: begin
                     byte_cnt_r <= 3;
-                    stack_r[63:32] <= word_i; 
-                    done_r <= '0; 
+                    stack_r[63:32] <= word_i;
+                    done_r <= '0;
                 end
                 3: begin
                     byte_cnt_r <= 0;
