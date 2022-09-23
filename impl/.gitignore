@@ -16,3 +16,4 @@ genus2invs*
 *.old
 *.rpt
 mp_data
+.timing_file*

@@ -30,7 +30,7 @@ set_db information_level 9
 ## Library setup
 ###############################################################
 
-read_mmmc aes_mmmc.tcl
+read_mmmc tsmc-mmmc.tcl
 
 set_db lef_library /kits/tsmc/65nm/GP_stclib/10-track/tcbn65gplushpbwp-set/tcbn65gplushpbwp_140a_FE/TSMCHOME/digital/Back_End/lef/tcbn65gplushpbwp_140a/lef/tcbn65gplushpbwp_6lmT1.lef
 

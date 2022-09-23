@@ -53,14 +53,17 @@ check-synth: .synth.timestamp $(SCRIPT_DIR)/aes_lec.do
 logdir:
 	mkdir -p $(LOG_DIR)
 
-clean:
+clean tools:
 	rm -rf genus.* innovus.* .cadence
-	rm -rf fv $(LOG_DIR) out reports mp_data
-	rm -rf timingReports checkDesign
-	rm -rf genus2invs_*
-	rm -f .*.timestamp .*.tstamp
-	rm -f *.rpt *.rpt.old
 	rm -f *.metalfill.rpt *.metalfill.rpt.old
 	rm -f viafill.density.rpt viafill.density.rpt.old
+	rm -rf fv $(LOG_DIR)  mp_data
+	rm -rf genus2invs_*
+	
+clean: clean tools	
+	rm -rf out reports
+	rm -rf timingReports checkDesign
+	rm -f .*.timestamp .*.tstamp
+	
 
-.PHONY: all clean synth synth-gui pnr pnr-gui check-synth logdir
+.PHONY: all clean clean tools synth synth-gui pnr pnr-gui check-synth logdir

@@ -8,14 +8,14 @@ set DATE [clock format [clock seconds] -format "%b%d-%T"]
 set_db init_netlist_files ${_OUTPUTS_PATH}/${DESIGN}_synth.v
 set_db init_lef_files /kits/tsmc/65nm/GP_stclib/10-track/tcbn65gplushpbwp-set/tcbn65gplushpbwp_140a_FE/TSMCHOME/digital/Back_End/lef/tcbn65gplushpbwp_140a/lef/tcbn65gplushpbwp_6lmT1.lef
 # includes captables and sdc
-set_db init_mmmc_files scripts/aes_mmmc.tcl
+set_db init_mmmc_files scripts/tsmc-mmmc.tcl
 
 set_db init_power_nets VDD
 set_db init_ground_nets VSS
 
 set_db design_process_node 65
 
-read_mmmc scripts/aes_mmmc.tcl
+read_mmmc scripts/tsmc-mmmc.tcl
 read_physical -lef /kits/tsmc/65nm/GP_stclib/10-track/tcbn65gplushpbwp-set/tcbn65gplushpbwp_140a_FE/TSMCHOME/digital/Back_End/lef/tcbn65gplushpbwp_140a/lef/tcbn65gplushpbwp_6lmT1.lef
 read_netlist ${_OUTPUTS_PATH}/${DESIGN}_synth.v -top aes_cipher_top
 
@@ -23,13 +23,13 @@ init_design
 
 create_floorplan -site core10T -core_density_size 1.0 0.75 5.0 5.0 5.0 5.0
 
-# set_db place_global_place_io_pins true
+set_db place_global_place_io_pins true
 
-set_db assign_pins_edit_in_batch true
-edit_pin -pin_width 0.1 -pin_depth 1.0 -fix_overlap 1 -unit micron -spread_direction clockwise -edge 0 -layer 3 -spread_type center -spacing 3 -pin {rst clk}
-edit_pin -pin_width 0.1 -pin_depth 1.0 -fix_overlap 1 -spread_direction clockwise -edge 1 -layer 2 -spread_type center -spacing 0.5 -pin {{text_in*} {key*} ld}
-edit_pin -pin_width 0.1 -pin_depth 1.0 -fix_overlap 1 -spread_direction clockwise -edge 3 -layer 2 -spread_type center -spacing 1 -pin {{text_out*} done}
-set_db assign_pins_edit_in_batch false
+# set_db assign_pins_edit_in_batch true
+# edit_pin -pin_width 0.1 -pin_depth 1.0 -fix_overlap 1 -unit micron -spread_direction clockwise -edge 0 -layer 3 -spread_type center -spacing 3 -pin {rst clk}
+# edit_pin -pin_width 0.1 -pin_depth 1.0 -fix_overlap 1 -spread_direction clockwise -edge 1 -layer 2 -spread_type center -spacing 0.5 -pin {{text_in*} {key*} ld}
+# edit_pin -pin_width 0.1 -pin_depth 1.0 -fix_overlap 1 -spread_direction clockwise -edge 3 -layer 2 -spread_type center -spacing 1 -pin {{text_out*} done}
+# set_db assign_pins_edit_in_batch false
 
 set_db design_bottom_routing_layer M1
 set_db design_top_routing_layer M6
@@ -54,14 +54,17 @@ check_place ${_REPORTS_PATH}/${DESIGN}_layout_place.rpt
 
 route_special -connect corePin -nets {VDD VSS} -layer_change_range {M1(1) M6(6)} -allow_jogging 1 -allow_layer_change 1
 
+set_pin_constraint -spacing 3 -layer {M2 M3 M4} -pin *
+assign_io_pins -move_fixed_pin -pins *
+
 create_clock_tree_spec
 
 ccopt_design
 opt_design -post_cts -hold
 
-add_fillers -base_cells {FILL16HPBWP FILL1HPBWP FILL2HPBWP FILL32HPBWP FILL4HPBWP FILL64HPBWP FILL8HPBWP}
+add_fillers -base_cells {FILL16HPBWP FILL1HPBWP FILL2HPBWP FILL32HPBWP FILL4HPBWP FILL64HPBWP FILL8HPBWP} -density 0.75
 check_drc -out_file ${_REPORTS_PATH}/${DESIGN}_layout_drc_prefix.rpt
-add_fillers -fix_drc
+add_fillers -fix_drc -base_cells {FILL16HPBWP FILL1HPBWP FILL2HPBWP FILL32HPBWP FILL4HPBWP FILL64HPBWP FILL8HPBWP} -density 0.75
 
 set_db timing_analysis_type ocv
 set_db timing_analysis_clock_propagation_mode sdc_control
@@ -93,8 +96,10 @@ check_metal_density -layer {M1 M2 M3 M4 M5 M6} -report ${_REPORTS_PATH}/${DESIGN
 report_timing -late > $_REPORTS_PATH/${DESIGN}_timing_layout.rpt
 report_timing -early > $_REPORTS_PATH/${DESIGN}_timing_layout_hold.rpt
 
-# TODO write_stream (GDS2)
-# write_stream ${_OUTPUTS_PATH}/${DESIGN}.gds
-# write_stream out.gds -map_file /kits/tsmc/65nm/GP_stclib/10-track/tcbn65gplushpbwp-set/tcbn65gplushpbwp_140a_FE/TSMCHOME/digital/Back_End/lef/tcbn65gplushpbwp_140a/techfiles/Virtuoso/map/Vir65nm_6M_3X2Y_v14a.022208.map -lib_name DesignLib -unit 2000 -mode all
+write_stream ${_OUTPUTS_PATH}/${DESIGN}.gds -map_file scripts/gds2.map -mode all
 
+report_summary -out_dir $_REPORTS_PATH/${DESIGN}
+report_summary -no_html -out_file $_REPORTS_PATH/${DESIGN}_layout_summary.rpt
+
+# Write database to restore session later
 write_db -timing_graph ${_OUTPUTS_PATH}/${DESIGN}.dat
