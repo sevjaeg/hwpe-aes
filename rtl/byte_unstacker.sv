@@ -47,6 +47,9 @@ begin : ff
     end
 end
 
+// TODO word_o latched?
+// TODO re-veryify
+
 always_comb
 begin
     if (filled_r & ready_i) begin
@@ -63,11 +66,14 @@ begin
             3: begin
                 word_o <= stack_r[31:0];
             end
+            default: begin
+                word_o <= 32'b0;
+            end
         endcase
         next_cnt <= cnt_r + 1;
     end else begin
         next_cnt <= cnt_r;
-        word_o <= '0;
+        word_o <= 32'b0;
     end
 end
 

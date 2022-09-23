@@ -52,9 +52,6 @@ module mac_engine
   logic               out_valid;
   logic               out_ready;
 
-  // CBC initialisation vector
-  logic signed [127:0] iv = 128'h000102030405060708090a0b0c0d0e0f;
-
   aes_cipher_top i_aes(
     .clk (clk_i),
     .rst (rst_ni),
@@ -114,7 +111,7 @@ module mac_engine
   always_ff @(posedge clk_i or negedge rst_ni)
   begin : proc_r_aes_out
     if(~rst_ni) begin
-      r_aes_out <=  iv;
+      r_aes_out <=  128'h000102030405060708090a0b0c0d0e0f;  // CBC initialisation vector
       aes_reg_valid <= 1'b1;
     end
     else begin
