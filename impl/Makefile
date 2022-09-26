@@ -1,39 +1,56 @@
-DESIGN := aes_cipher_top
+DESIGN := mac_top_wrap
 
 RTL_DIR := ../rtl
 LOG_DIR := logs
 SCRIPT_DIR := scripts
 OUT_DIR := out
 
-SRC_FILES := \
-	$(RTL_DIR)/aes_sbox.v \
-    $(RTL_DIR)/aes_rcon.v \
-    $(RTL_DIR)/aes_key_expand_128.v \
-    $(RTL_DIR)/aes_cipher_top.v \
-    $(RTL_DIR)/byte_stacker.sv \
-    $(RTL_DIR)/byte_unstacker.sv \
-    $(RTL_DIR)/mac_package.sv \
-    $(RTL_DIR)/mac_fsm.sv \
-    $(RTL_DIR)/mac_ctrl.sv \
-    $(RTL_DIR)/mac_streamer.sv \
-    $(RTL_DIR)/mac_engine.sv \
-    $(RTL_DIR)/mac_top.sv
-
+set-paths:
+ifeq ($(DESIGN), aes_cipher_top)
 COMMON_SCRIPTS := \
-	$(SCRIPT_DIR)/common.tcl \
-	$(SCRIPT_DIR)/aes.sdc \
-	$(SCRIPT_DIR)/aes_mmmc.tcl
-
+  $(SCRIPT_DIR)/common.tcl \
+  $(SCRIPT_DIR)/aes.sdc \
+  $(SCRIPT_DIR)/aes-mmmc.tcl
 SYN_SCRIPT := $(SCRIPT_DIR)/aes_syn.tcl
 PNR_SCRIPT := $(SCRIPT_DIR)/aes_impl.tcl
+SRC_FILES := \
+  $(RTL_DIR)/aes_sbox.v \
+  $(RTL_DIR)/aes_rcon.v \
+  $(RTL_DIR)/aes_key_expand_128.v \
+  $(RTL_DIR)/aes_cipher_top.v
+else
+ifeq ($(DESIGN), mac_top_wrap)
+COMMON_SCRIPTS := \
+  $(SCRIPT_DIR)/common.tcl \
+  $(SCRIPT_DIR)/aes.sdc \
+  $(SCRIPT_DIR)/aes-mmmc.tcl
+SYN_SCRIPT := $(SCRIPT_DIR)/hwpe_syn.tcl
+# PNR_SCRIPT := $(SCRIPT_DIR)/hwpe_syn.tcl
+SRC_FILES := \
+  $(RTL_DIR)/aes_sbox.v \
+  $(RTL_DIR)/aes_rcon.v \
+  $(RTL_DIR)/aes_key_expand_128.v \
+  $(RTL_DIR)/aes_cipher_top.v \
+  $(RTL_DIR)/byte_stacker.sv \
+  $(RTL_DIR)/byte_unstacker.sv \
+  $(RTL_DIR)/mac_package.sv \
+  $(RTL_DIR)/mac_fsm.sv \
+  $(RTL_DIR)/mac_ctrl.sv \
+  $(RTL_DIR)/mac_streamer.sv \
+  $(RTL_DIR)/mac_engine.sv \
+  $(RTL_DIR)/mac_top.sv
+else
+$(error Invalid design $(DESIGN). Use aes_cipher_top or mac_top_wrap)
+endif
+endif
 
 all: pnr
 
-.synth.timestamp: $(SRC_FILES) $(COMMON_SCRIPTS) $(SYN_SCRIPT)
+.synth.timestamp: set-paths $(SRC_FILES) $(COMMON_SCRIPTS) $(SYN_SCRIPT)
 	genus -batch -log ./$(LOG_DIR)/genus -files $(SYN_SCRIPT)
 	touch .synth.timestamp
 
-.pnr.timestamp: $(COMMON_SCRIPTS) $(PNR_SCRIPT) .synth.timestamp
+.pnr.timestamp: set-paths $(COMMON_SCRIPTS) $(PNR_SCRIPT) .synth.timestamp
 	innovus -stylus -no_gui -batch -log ./$(LOG_DIR)/innovus -files $(PNR_SCRIPT)
 	touch .pnr.timestamp
 
@@ -53,17 +70,17 @@ check-synth: .synth.timestamp $(SCRIPT_DIR)/aes_lec.do
 logdir:
 	mkdir -p $(LOG_DIR)
 
-clean tools:
+clean-tools:
 	rm -rf genus.* innovus.* .cadence
 	rm -f *.metalfill.rpt *.metalfill.rpt.old
 	rm -f viafill.density.rpt viafill.density.rpt.old
 	rm -rf fv $(LOG_DIR)  mp_data
 	rm -rf genus2invs_*
 	
-clean: clean tools	
+clean: clean-tools	
 	rm -rf out reports
 	rm -rf timingReports checkDesign
 	rm -f .*.timestamp .*.tstamp
 	
 
-.PHONY: all clean clean tools synth synth-gui pnr pnr-gui check-synth logdir
+.PHONY: all clean clean-tools synth synth-gui pnr pnr-gui check-synth logdir set-paths

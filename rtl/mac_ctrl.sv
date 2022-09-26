@@ -105,7 +105,7 @@ module mac_ctrl
   begin
     uloop_code = '0;
     uloop_code.loops[0] = 8'h04;
-    for(int i=0; i<196; i++) begin
+    for(int i=0; i<32; i++) begin  // originally 196, but this causes synthesis tool issues
       uloop_code.code [i] = uloop_bytecode[i];
     end
     uloop_code.range[0] = static_reg_nb_iter[11:0];

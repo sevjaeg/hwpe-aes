@@ -13,14 +13,14 @@ module mac_top_wrap
 #(
   parameter N_CORES = 2,
   parameter MP  = 4,
-  parameter ID  = 10
+  parameter ID  = 2  // set in pulp_soc/rtl/fc/fc_subsystem.sv Line 304
 )
 (
   // global signals
   input  logic                                  clk_i,
   input  logic                                  rst_ni,
   input  logic                                  test_mode_i,
-  // evnets
+  // events
   output logic [N_CORES-1:0][REGFILE_N_EVT-1:0] evt_o,
   // tcdm master ports
   output logic [MP-1:0]                         tcdm_req,

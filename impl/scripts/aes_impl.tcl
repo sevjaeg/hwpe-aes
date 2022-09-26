@@ -8,14 +8,14 @@ set DATE [clock format [clock seconds] -format "%b%d-%T"]
 set_db init_netlist_files ${_OUTPUTS_PATH}/${DESIGN}_synth.v
 set_db init_lef_files /kits/tsmc/65nm/GP_stclib/10-track/tcbn65gplushpbwp-set/tcbn65gplushpbwp_140a_FE/TSMCHOME/digital/Back_End/lef/tcbn65gplushpbwp_140a/lef/tcbn65gplushpbwp_6lmT1.lef
 # includes captables and sdc
-set_db init_mmmc_files scripts/tsmc-mmmc.tcl
+set_db init_mmmc_files scripts/aes-mmmc.tcl
 
 set_db init_power_nets VDD
 set_db init_ground_nets VSS
 
 set_db design_process_node 65
 
-read_mmmc scripts/tsmc-mmmc.tcl
+read_mmmc scripts/aes-mmmc.tcl
 read_physical -lef /kits/tsmc/65nm/GP_stclib/10-track/tcbn65gplushpbwp-set/tcbn65gplushpbwp_140a_FE/TSMCHOME/digital/Back_End/lef/tcbn65gplushpbwp_140a/lef/tcbn65gplushpbwp_6lmT1.lef
 read_netlist ${_OUTPUTS_PATH}/${DESIGN}_synth.v -top aes_cipher_top
 
