@@ -17,7 +17,10 @@ logic                                  ready_in;
 logic [31:0]                           word_in;
 logic [127:0]                          word_128;
 logic [31:0]                           word_out;
-
+reg	[31:0]                             test_vectors[7:0];
+integer                                i;
+integer                                j;
+integer                                errors;
 
 byte_stacker dut0(
     .clk_i (clk),
@@ -52,49 +55,67 @@ initial begin
     ready_out = 1;
     word_in = '0;
     clr = 0;
+    i = 0;
+
+    test_vectors[0] = 32'hAAAAAAAA;
+    test_vectors[1] = 32'hBBBBBBBB;
+    test_vectors[2] = 32'h12345678;
+    test_vectors[3] = 32'h55555555;
+    test_vectors[4] = 32'hBAAAAAAA;
+    test_vectors[5] = 32'hFFFFFFFF;
+    test_vectors[6] = 32'hABAAAAAA;
+    test_vectors[7] = 32'h00000000;
 
     repeat (2) @(posedge clk);
     rst_n = 1;
     @(posedge clk);
 
-    word_in = 32'hAAAAAAAA;
+    word_in = test_vectors[i];
+    i = i + 1;
     valid_in = 1;
     @(posedge clk);
     valid_in = 0;
     @(posedge clk);
 
-    word_in = 32'hBBBBBBBB;
+    word_in = test_vectors[i];
+    i = i + 1;
     valid_in = 1;
     @(posedge clk);
     valid_in = 0;
     @(posedge clk);
-
-    word_in = 32'h12345678;
+ 
+    word_in = test_vectors[i];
+    i = i + 1;
     valid_in = 1;
     @(posedge clk);
-    word_in = 32'h55555555;
+    word_in = test_vectors[i];
+    i = i + 1;
     @(posedge clk);
     valid_in = 0;
     @(posedge clk);
 
-    word_in = 32'hBAAAAAAA;
+    word_in = test_vectors[i];
+    i = i + 1;
     valid_in = 1;
     @(posedge clk);
-    word_in = 32'hFFFFFFFF;
+    word_in = test_vectors[i];
+    i = i + 1;
     ready_out = 0;
     @(posedge clk);
     
     valid_in = 0;
     @(posedge clk);
 
-    word_in = 32'hABAAAAAA;
+    word_in = test_vectors[i];
+    i = i + 1;
     valid_in = 1;
     @(posedge clk);
     valid_in = 0;
     @(posedge clk);
     @(posedge clk);
     @(posedge clk);
-    word_in = 32'hBAAAAAAA;
+    word_in = test_vectors[i];
+    i = i + 1;
     valid_in = 1;
     @(posedge clk);
     valid_in = 0;
@@ -109,6 +130,23 @@ initial begin
     while(clk_active) begin
         #5 clk = ~clk;
     end
+end
+
+initial begin
+    j = 0;
+    errors = 0;
+    $display("\nStarting stack/unstack testbench\n", errors);
+    while(clk_active) begin
+        @(posedge clk);
+        if (valid_out) begin
+            if(word_out != test_vectors[j]) begin
+                $display("ERROR @%t ns: output=%h expect=%h", $time, word_out, test_vectors[j]);
+                errors = errors + 1;
+            end;
+            j = j + 1;
+        end
+    end
+    $display("\nCompleted 8 checks with %d errors.\n", errors);
 end
 
 endmodule

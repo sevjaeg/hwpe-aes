@@ -14,7 +14,7 @@ module byte_stacker
 );
 
 logic unsigned [1:0] byte_cnt_r;
-logic signed [127:0] stack_r;
+logic unsigned [127:0] stack_r;
 logic done_r;
 
 assign valid_o = done_r;
@@ -59,7 +59,7 @@ begin : ff
             endcase
         end
         else if (done_r & ready_i) begin
-            done_r <= 0;
+            done_r <= '0;
             stack_r <= '0; // simplifies debugging
         end
     end

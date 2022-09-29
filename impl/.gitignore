@@ -12,8 +12,13 @@ reports/
 timingReports/
 checkDesign/
 fv/
+fv*/
 genus2invs*
 *.old
 *.rpt
+*.mtarpt
 mp_data
 .timing_file*
+scheduling_file.*
+
+tcbn65gplushpbwp.v

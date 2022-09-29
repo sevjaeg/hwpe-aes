@@ -35,20 +35,17 @@ begin : ff
     else if (enable_i) begin
         if (valid_i & ~filled_r) begin
             stack_r <= word_i;
-            filled_r <= 1;
+            filled_r <= '1;
         end
 
         if (next_cnt == 4) begin
-            filled_r <= 0;
-            cnt_r <= 0;
+            filled_r <= '0;
+            cnt_r <= '0;
         end else begin
             cnt_r <= next_cnt;
         end
     end
 end
-
-// TODO word_o latched?
-// TODO re-veryify
 
 always_comb
 begin
@@ -70,7 +67,7 @@ begin
                 word_o <= 32'b0;
             end
         endcase
-        next_cnt <= cnt_r + 1;
+        next_cnt <= cnt_r + $unsigned('1);
     end else begin
         next_cnt <= cnt_r;
         word_o <= 32'b0;

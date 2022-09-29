@@ -1,68 +1,66 @@
-#### Template Script for RTL->Gate-Level Flow (generated from GENUS 19.14-s108_1) 
-
-puts "Hostname : [info hostname]"
+puts "Host : [info hostname]"
 
 ##############################################################################
 ## Preset global variables and attributes
 ##############################################################################
 
 include scripts/common.tcl
-set DESIGN mac_top_wrap
+set DESIGN $::env(CADENCE_DESIGN)
 
 set GEN_EFF medium
 set MAP_OPT_EFF high
 set DATE [clock format [clock seconds] -format "%b%d-%T"] 
 
-set_db init_lib_search_path /kits/tsmc/65nm/GP_stclib/10-track/tcbn65gplushpbwp-set/tcbn65gplushpbwp_140a_FE/TSMCHOME/digital/Front_End/timing_power_noise/NLDM/tcbn65gplushpbwp_140a/
+set_db init_lib_search_path /kits/tsmc/65nm/GP_stclib/10-track/tcbn65gplushpbwp-set/tcbn65gplushpbwp_140a_FE/TSMCHOME/digital/Front_End/timing_power_noise/CCS/tcbn65gplushpbwp_140a/
 set_db script_search_path {. scripts}
 
-set_db init_hdl_search_path {../rtl ../wrap ../../hwpe-stream/rtl ../../hwpe-stream/rtl/basic ../../hwpe-stream/rtl/fifo ../../hwpe-stream/rtl/streamer ../../hwpe-stream/rtl/tcdm ../../hwpe-ctrl/rtl ./hdl}
-
 ##Default undriven/unconnected setting is 'none'.  
-##set_db / .hdl_unconnected_value 0 | 1 | x | none
+set_db hdl_unconnected_value 0
 
-# design contains latches
-set_db hdl_error_on_latch 0
+if {$DESIGN == "mac_top_wrap"} {
+  # mac_top_wrap contains latches
+  set_db hdl_error_on_latch 0
+} else {
+   set_db hdl_error_on_latch 1
+}
+
 set_db hdl_error_on_blackbox 1
 set_db hdl_error_on_negedge 1
 
-set_db hdl_track_filename_row_col true
-
 set_db information_level 9
+
+suppress_messages {LBR-9 LBR-76 LBR-101 LBR-162 LBR-415 LBR-511 PHYS-12}
+
+set_db hdl_track_filename_row_col true
+set_db hdl_sv_module_wrapper true
+# introduces slight area overhead, but keeps hierarchy
+set_db auto_ungroup none
+
+set_db lp_insert_clock_gating false
+set_db design_process_node 65
 
 ###############################################################
 ## Library setup
 ###############################################################
 
-read_mmmc hwpe-mmmc.tcl
+read_mmmc ${DESIGN}-mmmc.tcl
 
 set_db lef_library /kits/tsmc/65nm/GP_stclib/10-track/tcbn65gplushpbwp-set/tcbn65gplushpbwp_140a_FE/TSMCHOME/digital/Back_End/lef/tcbn65gplushpbwp_140a/lef/tcbn65gplushpbwp_6lmT1.lef
-
-set_db lp_insert_clock_gating false
-set_db design_process_node 65
 
 ####################################################################
 ## Load Design
 ####################################################################
 
-read_hdl aes_sbox.v aes_rcon.v aes_key_expand_128.v aes_cipher_top.v
-read_hdl -sv cluster_clock_gating.sv
-read_hdl -sv hwpe_ctrl_package.sv hwpe_ctrl_interfaces.sv hwpe_ctrl_regfile.sv hwpe_ctrl_regfile_latch.sv  hwpe_ctrl_regfile_latch_test_wrap.sv hwpe_ctrl_seq_mult.sv hwpe_ctrl_slave.sv hwpe_ctrl_uloop.sv
-read_hdl -sv hwpe_stream_package.sv hwpe_stream_assign.sv hwpe_stream_buffer.sv hwpe_stream_demux_static.sv hwpe_stream_deserialize.sv hwpe_stream_fence.sv hwpe_stream_merge.sv hwpe_stream_mux_static.sv hwpe_stream_serialize.sv hwpe_stream_split.sv hwpe_stream_fifo.sv hwpe_stream_fifo_ctrl.sv hwpe_stream_fifo_earlystall.sv hwpe_stream_fifo_earlystall_sidech.sv hwpe_stream_fifo_scm.sv hwpe_stream_fifo_scm_test_wrap.sv hwpe_stream_fifo_sidech.sv hwpe_stream_interfaces.sv hwpe_stream_addressgen.sv hwpe_stream_addressgen_v2.sv hwpe_stream_addressgen_v3.sv hwpe_stream_sink.sv hwpe_stream_sink_realign.sv hwpe_stream_source.sv hwpe_stream_source_realign.sv hwpe_stream_strbgen.sv hwpe_stream_streamer_queue.sv hwpe_stream_tcdm_assign.sv hwpe_stream_tcdm_fifo.sv hwpe_stream_tcdm_fifo_load.sv hwpe_stream_tcdm_fifo_load_sidech.sv hwpe_stream_tcdm_fifo_store.sv hwpe_stream_tcdm_mux.sv hwpe_stream_tcdm_mux_static.sv hwpe_stream_tcdm_reorder.sv hwpe_stream_tcdm_reorder_static.sv
-read_hdl -sv byte_stacker.sv byte_unstacker.sv mac_package.sv mac_ctrl.sv mac_fsm.sv mac_streamer.sv mac_engine.sv mac_top.sv mac_top_wrap.sv
+include ${DESIGN}-hdl.tcl
 
 elaborate $DESIGN
 puts "Runtime & Memory after 'read_hdl'"
 time_info Elaboration
 
-set_db auto_ungroup none
-
 init_design
 
-check_design -unresolved
-check_design -all
-
-check_timing_intent -verbose
+check_design -all > $_REPORTS_PATH/${DESIGN}/check.rpt
+check_timing_intent -verbose > $_REPORTS_PATH/${DESIGN}/check_timing.rpt
 
 ###################################################################################
 ## Define cost groups (clock-clock, clock-output, input-clock, input-output)
@@ -79,9 +77,10 @@ if {[llength [all_registers]] > 0} {
 
 define_cost_group -name I2O -design $DESIGN
 path_group -from [all_inputs]  -to [all_outputs] -group I2O -name I2O -view TSMC65G_av_slow
-foreach cg [vfind / -cost_group *] {
-  # report_timing -group [list $cg] >> $_REPORTS_PATH/${DESIGN}_pretim.rpt
-}
+
+# foreach cg [vfind / -cost_group *] {
+#   report_timing -group [list $cg] >> $_REPORTS_PATH/${DESIGN}/timing_pretim.rpt
+# }
 
 ####################################################################################################
 ## Synthesizing to generic 
@@ -91,8 +90,8 @@ set_db syn_generic_effort $GEN_EFF
 syn_generic
 puts "Runtime & Memory after 'syn_generic'"
 time_info GENERIC
-write_snapshot -outdir $_REPORTS_PATH -tag generic
-report_summary -directory $_REPORTS_PATH
+
+write_snapshot -outdir $_REPORTS_PATH/${DESIGN} -tag 1_generic
 
 ####################################################################################################
 ## Synthesizing to gates
@@ -102,46 +101,67 @@ set_db syn_map_effort $MAP_OPT_EFF
 syn_map
 puts "Runtime & Memory after 'syn_map'"
 time_info MAPPED
-write_snapshot -outdir $_REPORTS_PATH -tag map
-report_summary -directory $_REPORTS_PATH
 
-foreach cg [vfind / -cost_group *] {
-  report_timing -group [list $cg] >> $_REPORTS_PATH/${DESIGN}_pretim.rpt
-}
+write_snapshot -outdir $_REPORTS_PATH/${DESIGN} -tag 2_map
+
+# foreach cg [vfind / -cost_group *] {
+#   report_timing -group [list $cg] >> $_REPORTS_PATH/${DESIGN}/timing_pretim.rpt
+# }
 
 #######################################################################################################
-## Optimize Netlist
+## Optimize netlist
 #######################################################################################################
 
 ## Uncomment to remove assigns & insert tiehilo cells during Incremental synthesis
-##set_attribute remove_assigns true /
+##set_attribute remove_assigns true
 ##set_remove_assign_options -buffer_or_inverter <libcell> -design <design|subdesign> 
-##set_attribute use_tiehilo_for_const <none|duplicate|unique> /
+##set_attribute use_tiehilo_for_const <none|duplicate|unique>
+
 set_db syn_opt_effort $MAP_OPT_EFF
 syn_opt
-write_snapshot -outdir $_REPORTS_PATH -tag final
-report_summary -directory $_REPORTS_PATH
+
+write_snapshot -outdir $_REPORTS_PATH/${DESIGN} -tag 3_final
 
 puts "Runtime & Memory after 'syn_opt'"
 time_info OPT
 
-foreach cg [vfind / -cost_group *] {
-  report_timing -group [list $cg] >> $_REPORTS_PATH/${DESIGN}_pretim.rpt
+# foreach cg [vfind / -cost_group *] {
+#   report_timing -group [list $cg] >> $_REPORTS_PATH/${DESIGN}/timing_pretim.rpt
+# }
+
+######################################################################################################
+## write backend file set (verilog, config, etc.) and reports
+######################################################################################################
+
+write_design -innovus -base_name ${_OUTPUTS_PATH}/${DESIGN}/${DESIGN}
+
+check_timing_intent -verbose > $_REPORTS_PATH/${DESIGN}/check_timing_final.rpt
+report_timing -nworst 10 > $_REPORTS_PATH/${DESIGN}/timing.rpt
+report_timing -unconstrained -nworst 10 > $_REPORTS_PATH/${DESIGN}/timing_unconstrained.rpt
+report_area -detail > $_REPORTS_PATH/${DESIGN}/area.rpt
+report_gates > $_REPORTS_PATH/${DESIGN}/gates.rpt
+report_power > $_REPORTS_PATH/${DESIGN}/power.rpt
+report_qor > $_REPORTS_PATH/${DESIGN}/qor.rpt
+report_dp > $_REPORTS_PATH/${DESIGN}/datapath.rpt
+report_summary -directory $_REPORTS_PATH/${DESIGN}/
+report_messages -all > $_REPORTS_PATH/${DESIGN}/messages.rpt
+report_messages -all -include_suppressed > $_REPORTS_PATH/${DESIGN}/messages_suppressed.rpt
+
+if {$DESIGN == "mac_top_wrap"} {
+  write_sv_wrapper -continue_on_error -module_name ${DESIGN}_genus -rename_module mac_top_wrap \
+                   > ${_OUTPUTS_PATH}/${DESIGN}_synth_wrap.sv
+  set DESIGN_LEC ${DESIGN}_genus
+} else {
+  set DESIGN_LEC ${DESIGN}
 }
-
-######################################################################################################
-## write backend file set (verilog, SDC, config, etc.) and reports
-######################################################################################################
-
-report_messages > $_REPORTS_PATH/${DESIGN}_messages.rpt
-report_timing > $_REPORTS_PATH/${DESIGN}_timing.rpt
-report_area > $_REPORTS_PATH/${DESIGN}_area.rpt
-report_gates > $_REPORTS_PATH/${DESIGN}_gates.rpt
-report_power > $_REPORTS_PATH/${DESIGN}_power.rpt
-report_dp > $_REPORTS_PATH/${DESIGN}_datapath.rpt
-
 write_netlist  > ${_OUTPUTS_PATH}/${DESIGN}_synth.v
-write_design -innovus -base_name ${_OUTPUTS_PATH}/${DESIGN}
+
+write_do_lec -logfile ../$_REPORTS_PATH/${DESIGN}/lec_synth.log \
+             -sim_lib /kits/tsmc/65nm/GP_stclib/10-track/tcbn65gplushpbwp-set/tcbn65gplushpbwp_140a_FE/TSMCHOME/digital/Front_End/verilog/tcbn65gplushpbwp_140a/tcbn65gplushpbwp.v \
+             -golden_design rtl \
+             -revised_design ${_OUTPUTS_PATH}/${DESIGN}_synth.v \
+             -top ${DESIGN_LEC} -tmp_dir tmp/ \
+             > ${_OUTPUTS_PATH}/${DESIGN}_lec_synth.do
 
 puts "Final Runtime & Memory."
 time_info FINAL

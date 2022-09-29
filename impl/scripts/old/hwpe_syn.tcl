@@ -7,40 +7,55 @@ puts "Hostname : [info hostname]"
 ##############################################################################
 
 include scripts/common.tcl
-set DESIGN aes_cipher_top
+set DESIGN $::env(CADENCE_DESIGN)
 
 set GEN_EFF medium
 set MAP_OPT_EFF high
 set DATE [clock format [clock seconds] -format "%b%d-%T"] 
 
-set_db init_lib_search_path /kits/tsmc/65nm/GP_stclib/10-track/tcbn65gplushpbwp-set/tcbn65gplushpbwp_140a_FE/TSMCHOME/digital/Front_End/timing_power_noise/NLDM/tcbn65gplushpbwp_140a/
+set_db init_lib_search_path /kits/tsmc/65nm/GP_stclib/10-track/tcbn65gplushpbwp-set/tcbn65gplushpbwp_140a_FE/TSMCHOME/digital/Front_End/timing_power_noise/CCS/tcbn65gplushpbwp_140a/
 set_db script_search_path {. scripts}
-
-set_db init_hdl_search_path /home/sjaeger/pulpissimo/ips/hwpe-mac-engine/rtl
 
 ##Default undriven/unconnected setting is 'none'.  
 ##set_db / .hdl_unconnected_value 0 | 1 | x | none
 
+# design contains latches
+set_db hdl_error_on_latch 0
 set_db hdl_error_on_blackbox 1
-set_db hdl_error_on_latch 1
+set_db hdl_error_on_negedge 1
 
 set_db information_level 9
+
+# TODO check
+suppress_messages {}
+
+set_db hdl_track_filename_row_col true
+# introduces slight area overhead, but keeps hierarchy
+set_db auto_ungroup none
+
+set_db lp_insert_clock_gating false
+set_db design_process_node 65
 
 ###############################################################
 ## Library setup
 ###############################################################
 
-read_mmmc aes-mmmc.tcl
+read_mmmc $DESIGN-mmmc.tcl
 
 set_db lef_library /kits/tsmc/65nm/GP_stclib/10-track/tcbn65gplushpbwp-set/tcbn65gplushpbwp_140a_FE/TSMCHOME/digital/Back_End/lef/tcbn65gplushpbwp_140a/lef/tcbn65gplushpbwp_6lmT1.lef
-
-set_db lp_insert_clock_gating false
 
 ####################################################################
 ## Load Design
 ####################################################################
 
+set_db init_hdl_search_path {../rtl ../wrap ../../hwpe-stream/rtl ../../hwpe-stream/rtl/basic ../../hwpe-stream/rtl/fifo ../../hwpe-stream/rtl/streamer ../../hwpe-stream/rtl/tcdm ../../hwpe-ctrl/rtl ./hdl}
+
 read_hdl aes_sbox.v aes_rcon.v aes_key_expand_128.v aes_cipher_top.v
+read_hdl -sv cluster_clock_gating.sv
+read_hdl -sv hwpe_ctrl_package.sv hwpe_ctrl_interfaces.sv hwpe_ctrl_regfile.sv hwpe_ctrl_regfile_latch.sv  hwpe_ctrl_regfile_latch_test_wrap.sv hwpe_ctrl_seq_mult.sv hwpe_ctrl_slave.sv hwpe_ctrl_uloop.sv
+read_hdl -sv hwpe_stream_package.sv hwpe_stream_assign.sv hwpe_stream_buffer.sv hwpe_stream_demux_static.sv hwpe_stream_deserialize.sv hwpe_stream_fence.sv hwpe_stream_merge.sv hwpe_stream_mux_static.sv hwpe_stream_serialize.sv hwpe_stream_split.sv hwpe_stream_fifo.sv hwpe_stream_fifo_ctrl.sv hwpe_stream_fifo_earlystall.sv hwpe_stream_fifo_earlystall_sidech.sv hwpe_stream_fifo_scm.sv hwpe_stream_fifo_scm_test_wrap.sv hwpe_stream_fifo_sidech.sv hwpe_stream_interfaces.sv hwpe_stream_addressgen.sv hwpe_stream_addressgen_v2.sv hwpe_stream_addressgen_v3.sv hwpe_stream_sink.sv hwpe_stream_sink_realign.sv hwpe_stream_source.sv hwpe_stream_source_realign.sv hwpe_stream_strbgen.sv hwpe_stream_streamer_queue.sv hwpe_stream_tcdm_assign.sv hwpe_stream_tcdm_fifo.sv hwpe_stream_tcdm_fifo_load.sv hwpe_stream_tcdm_fifo_load_sidech.sv hwpe_stream_tcdm_fifo_store.sv hwpe_stream_tcdm_mux.sv hwpe_stream_tcdm_mux_static.sv hwpe_stream_tcdm_reorder.sv hwpe_stream_tcdm_reorder_static.sv
+read_hdl -sv byte_stacker.sv byte_unstacker.sv mac_package.sv mac_ctrl.sv mac_fsm.sv mac_streamer.sv mac_engine.sv mac_top.sv
+read_hdl -sv -define ASIC=1 mac_top_wrap.sv
 
 elaborate $DESIGN
 puts "Runtime & Memory after 'read_hdl'"
@@ -69,7 +84,7 @@ if {[llength [all_registers]] > 0} {
 define_cost_group -name I2O -design $DESIGN
 path_group -from [all_inputs]  -to [all_outputs] -group I2O -name I2O -view TSMC65G_av_slow
 foreach cg [vfind / -cost_group *] {
-  # report_timing -group [list $cg] >> $_REPORTS_PATH/${DESIGN}_pretim.rpt
+  report_timing -group [list $cg] >> $_REPORTS_PATH/${DESIGN}_pretim.rpt
 }
 
 ####################################################################################################
@@ -80,7 +95,7 @@ set_db syn_generic_effort $GEN_EFF
 syn_generic
 puts "Runtime & Memory after 'syn_generic'"
 time_info GENERIC
-write_snapshot -outdir $_REPORTS_PATH -tag generic
+write_snapshot -outdir $_REPORTS_PATH -tag ${DESIGN}_generic
 report_summary -directory $_REPORTS_PATH
 
 ####################################################################################################
@@ -91,7 +106,7 @@ set_db syn_map_effort $MAP_OPT_EFF
 syn_map
 puts "Runtime & Memory after 'syn_map'"
 time_info MAPPED
-write_snapshot -outdir $_REPORTS_PATH -tag map
+write_snapshot -outdir $_REPORTS_PATH -tag ${DESIGN}_map
 report_summary -directory $_REPORTS_PATH
 
 foreach cg [vfind / -cost_group *] {
@@ -108,7 +123,7 @@ foreach cg [vfind / -cost_group *] {
 ##set_attribute use_tiehilo_for_const <none|duplicate|unique> /
 set_db syn_opt_effort $MAP_OPT_EFF
 syn_opt
-write_snapshot -outdir $_REPORTS_PATH -tag final
+write_snapshot -outdir $_REPORTS_PATH -tag ${DESIGN}_final
 report_summary -directory $_REPORTS_PATH
 
 puts "Runtime & Memory after 'syn_opt'"
@@ -122,6 +137,9 @@ foreach cg [vfind / -cost_group *] {
 ## write backend file set (verilog, SDC, config, etc.) and reports
 ######################################################################################################
 
+report timing -lint
+check_timing_intent
+
 report_messages > $_REPORTS_PATH/${DESIGN}_messages.rpt
 report_timing > $_REPORTS_PATH/${DESIGN}_timing.rpt
 report_area > $_REPORTS_PATH/${DESIGN}_area.rpt
@@ -131,6 +149,7 @@ report_dp > $_REPORTS_PATH/${DESIGN}_datapath.rpt
 
 write_netlist  > ${_OUTPUTS_PATH}/${DESIGN}_synth.v
 write_design -innovus -base_name ${_OUTPUTS_PATH}/${DESIGN}
+
 
 puts "Final Runtime & Memory."
 time_info FINAL

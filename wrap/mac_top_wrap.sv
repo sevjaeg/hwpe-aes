@@ -11,8 +11,8 @@ import hwpe_ctrl_package::*;
 
 module mac_top_wrap
 #(
-  parameter N_CORES = 2,
-  parameter MP  = 4,
+  parameter N_CORES = 2,  // kept default
+  parameter MP  = 4, // kept default
   parameter ID  = 2  // set in pulp_soc/rtl/fc/fc_subsystem.sv Line 304
 )
 (
