@@ -1,3 +1,5 @@
+`timescale 1ns / 10ps
+
 module test(
 
 );
@@ -5,24 +7,24 @@ module test(
 logic clk = 0;
 logic clk_active = 1;
 
-logic                                  rst_n;
-logic                                  clr;
-logic                                  enable;
-logic                                  valid_in;
-logic                                  valid_mid;
-logic                                  valid_out;
-logic                                  ready_out;
-logic                                  ready_mid;
-logic                                  ready_in;
-logic [31:0]                           word_in;
-logic [127:0]                          word_128;
-logic [31:0]                           word_out;
-reg	[31:0]                             test_vectors[7:0];
-integer                                i;
-integer                                j;
-integer                                errors;
+logic         rst_n;
+logic         clr;
+logic         enable;
+logic         valid_in;
+logic         valid_mid;
+logic         valid_out;
+logic         ready_out;
+logic         ready_mid;
+logic         ready_in;
+logic [31:0]  word_in;
+logic [127:0] word_128;
+logic [31:0]  word_out;
+logic [31:0]  test_vectors[7:0];
+integer       i;
+integer       j;
+integer       errors;
 
-byte_stacker dut0(
+byte_stacker i_stacker(
     .clk_i (clk),
     .rst_ni (rst_n),
     .clr_i  (clr),
@@ -35,7 +37,7 @@ byte_stacker dut0(
     .word_o (word_128)
 );
 
-byte_unstacker dut1(
+byte_unstacker i_unstacker(
     .clk_i (clk),
     .rst_ni (rst_n),
     .clr_i  (clr),
@@ -135,7 +137,7 @@ end
 initial begin
     j = 0;
     errors = 0;
-    $display("\nStarting stack/unstack testbench\n", errors);
+    $display("\nStarting stack/unstack testbench\n");
     while(clk_active) begin
         @(posedge clk);
         if (valid_out) begin
@@ -146,7 +148,7 @@ initial begin
             j = j + 1;
         end
     end
-    $display("\nCompleted 8 checks with %d errors.\n", errors);
+    $display("\nCompleted %d out of 8 checks with %d errors.\n", j, errors);
 end
 
 endmodule

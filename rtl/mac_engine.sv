@@ -103,7 +103,7 @@ module mac_engine
 
   assign out_ready = d_o.ready;
 
-  assign aes_start = word_chained_valid & word_ready & key_valid & key_ready;
+  assign aes_start = word_chained_valid & key_valid & aes_ready;
 
   assign word_chained = r_aes_out ^ word;
   assign word_chained_valid = word_valid & aes_reg_valid;
@@ -118,12 +118,10 @@ module mac_engine
       if (aes_valid) begin
         r_aes_out <= aes_out;
         aes_reg_valid <= 1'b1;
-      end
-      else if(aes_start) begin
+      end else if(aes_start) begin
         r_aes_out <= r_aes_out;
         aes_reg_valid <= 1'b0;
-      end
-      else begin
+      end else begin
         r_aes_out <= r_aes_out;
         aes_reg_valid <= aes_reg_valid;
       end
@@ -142,10 +140,13 @@ module mac_engine
       // word_valid is re-evaluated after a valid handshake or in transition to 1
       if (aes_start) begin
         aes_busy <= '1;
-      end
-      if (aes_valid) begin
+      end else if (aes_valid) begin
         aes_busy <= '0;
+      end else begin
+        aes_busy <= aes_busy;
       end
+    end else begin
+      aes_busy <= aes_busy;
     end
   end
 
@@ -192,7 +193,9 @@ module mac_engine
   // In the following:
   // R_valid & R_ready denominate the handshake at the *output* (Q port) of pipe register R
 
-  assign word_ready = !aes_busy & word_valid & key_valid;
-  assign key_ready = !aes_busy & word_valid & key_valid;
+  // the other stackers valid signal is important in case the data does not
+  // arrive simultaneously
+  assign word_ready = !aes_busy & aes_ready & key_valid;
+  assign key_ready = !aes_busy & aes_ready & word_chained_valid;
   
 endmodule // mac_engine

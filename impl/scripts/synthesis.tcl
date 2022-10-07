@@ -14,8 +14,7 @@ set DATE [clock format [clock seconds] -format "%b%d-%T"]
 set_db init_lib_search_path /kits/tsmc/65nm/GP_stclib/10-track/tcbn65gplushpbwp-set/tcbn65gplushpbwp_140a_FE/TSMCHOME/digital/Front_End/timing_power_noise/CCS/tcbn65gplushpbwp_140a/
 set_db script_search_path {. scripts}
 
-##Default undriven/unconnected setting is 'none'.  
-set_db hdl_unconnected_value 0
+set_db hdl_unconnected_value none
 
 if {$DESIGN == "mac_top_wrap"} {
   # mac_top_wrap contains latches
@@ -43,7 +42,7 @@ set_db design_process_node 65
 ## Library setup
 ###############################################################
 
-read_mmmc ${DESIGN}-mmmc.tcl
+read_mmmc mmmc.tcl
 
 set_db lef_library /kits/tsmc/65nm/GP_stclib/10-track/tcbn65gplushpbwp-set/tcbn65gplushpbwp_140a_FE/TSMCHOME/digital/Back_End/lef/tcbn65gplushpbwp_140a/lef/tcbn65gplushpbwp_6lmT1.lef
 
@@ -141,14 +140,14 @@ report_timing -unconstrained -nworst 10 > $_REPORTS_PATH/${DESIGN}/timing_uncons
 report_area -detail > $_REPORTS_PATH/${DESIGN}/area.rpt
 report_gates > $_REPORTS_PATH/${DESIGN}/gates.rpt
 report_power > $_REPORTS_PATH/${DESIGN}/power.rpt
-report_qor > $_REPORTS_PATH/${DESIGN}/qor.rpt
-report_dp > $_REPORTS_PATH/${DESIGN}/datapath.rpt
+report_qor   > $_REPORTS_PATH/${DESIGN}/qor.rpt
+report_dp    > $_REPORTS_PATH/${DESIGN}/datapath.rpt
 report_summary -directory $_REPORTS_PATH/${DESIGN}/
 report_messages -all > $_REPORTS_PATH/${DESIGN}/messages.rpt
 report_messages -all -include_suppressed > $_REPORTS_PATH/${DESIGN}/messages_suppressed.rpt
 
-if {$DESIGN == "mac_top_wrap"} {
-  write_sv_wrapper -continue_on_error -module_name ${DESIGN}_genus -rename_module mac_top_wrap \
+if {$DESIGN != "aes_cipher_top"} {
+  write_sv_wrapper -continue_on_error -module_name ${DESIGN}_genus -rename_module $DESIGN \
                    > ${_OUTPUTS_PATH}/${DESIGN}_synth_wrap.sv
   set DESIGN_LEC ${DESIGN}_genus
 } else {

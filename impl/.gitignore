@@ -2,6 +2,7 @@ genus.*
 innovus.*
 
 out/
+tmp/
 logs/
 reports/
 .cadence/

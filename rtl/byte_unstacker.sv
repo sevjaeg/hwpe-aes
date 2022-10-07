@@ -13,39 +13,40 @@ module byte_unstacker
   output logic [31:0]                           word_o
 );
 
-logic unsigned [2:0] cnt_r;
+logic unsigned [1:0] cnt_r;
 logic unsigned [2:0] next_cnt;
 logic signed [127:0] stack_r;
 logic filled_r;
-
-assign ready_o = (~filled_r);
 
 always_ff @(posedge clk_i or negedge rst_ni)
 begin : ff
     if(~rst_ni) begin
         stack_r <= '0;
         cnt_r  <= '0;
-        filled_r <= '0;
-    end
-    else if (clr_i) begin
+        filled_r <= 1'b0;
+    end else if (clr_i) begin
         stack_r  <= '0;
         cnt_r  <= '0;
-        filled_r <= '0;
-    end
-    else if (enable_i) begin
-        if (valid_i & ~filled_r) begin
-            stack_r <= word_i;
-            filled_r <= '1;
-        end
+        filled_r <= 1'b0;
+    end else if (enable_i) begin
+        stack_r <= stack_r;
+        filled_r <= filled_r;
 
         if (next_cnt == 4) begin
-            filled_r <= '0;
+            filled_r <= 1'b0;
             cnt_r <= '0;
+        end else if (valid_i & ~filled_r) begin
+            stack_r <= word_i;
+            filled_r <= 1'b1;
+            cnt_r <= next_cnt[1:0];
         end else begin
-            cnt_r <= next_cnt;
+            cnt_r <= next_cnt[1:0];
         end
     end
 end
+
+assign ready_o = ~filled_r;
+assign valid_o = filled_r & ready_i;
 
 always_comb
 begin
@@ -63,17 +64,12 @@ begin
             3: begin
                 word_o <= stack_r[31:0];
             end
-            default: begin
-                word_o <= 32'b0;
-            end
         endcase
-        next_cnt <= cnt_r + $unsigned('1);
+        next_cnt <= cnt_r + 1;
     end else begin
-        next_cnt <= cnt_r;
+        next_cnt <= {1'b0, cnt_r};
         word_o <= 32'b0;
     end
 end
-
-assign valid_o = filled_r & ready_i;
 
 endmodule // byte_unstacker

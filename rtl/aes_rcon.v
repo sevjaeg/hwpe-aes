@@ -54,6 +54,10 @@
 //
 //
 
+`ifdef SIM
+`include "timescale.v"
+`endif
+
 module aes_rcon(clk, kld, out);
 input		clk;
 input		kld;

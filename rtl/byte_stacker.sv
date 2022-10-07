@@ -34,6 +34,10 @@ begin : ff
         done_r <= '0;
     end
     else if (enable_i) begin
+        stack_r <= stack_r;
+        byte_cnt_r  <= byte_cnt_r;
+        done_r <= done_r;
+
         if (valid_i & ~done_r) begin
             case(byte_cnt_r)
                 0: begin
