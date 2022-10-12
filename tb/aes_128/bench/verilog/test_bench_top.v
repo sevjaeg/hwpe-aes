@@ -57,7 +57,7 @@
 //
 //
 
-`timescale 1ns / 10ps
+`timescale 1ns / 1ps
 
 module test;
 
@@ -439,7 +439,7 @@ assign text_in = kld ? tmp[255:128] : 128'hx;
 assign plain   = tmp[255:128];
 assign ciph    = tmp[127:0];
 
-always #5 clk = ~clk;
+always #0.8 clk = ~clk;
 
 aes_cipher_top u0(
 	.clk(		clk		),

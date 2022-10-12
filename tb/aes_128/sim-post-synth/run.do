@@ -1,6 +1,6 @@
 do compile.do
 
-vsim work.test -t ns
+vsim work.test -t ps
 do wave.do
 do sim.do
 wave zoom full

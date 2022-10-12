@@ -1,7 +1,7 @@
 source scripts/common.tcl
 set DESIGN $::env(CADENCE_DESIGN)
 
-read_db ${_OUTPUTS_PATH}/${DESIGN}.dat
+read_db ${_OUTPUTS_PATH}/${DESIGN}_layout.dat
 gui_show
 
 set_layer_preference violation -is_visible 1

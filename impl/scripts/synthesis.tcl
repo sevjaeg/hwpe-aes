@@ -132,7 +132,7 @@ time_info OPT
 ## write backend file set (verilog, config, etc.) and reports
 ######################################################################################################
 
-write_design -innovus -base_name ${_OUTPUTS_PATH}/${DESIGN}/${DESIGN}
+write_design -innovus -base_name ${_OUTPUTS_PATH}/${DESIGN}/${DESIGN}_synth.dat
 
 check_timing_intent -verbose > $_REPORTS_PATH/${DESIGN}/check_timing_final.rpt
 report_timing -nworst 10 > $_REPORTS_PATH/${DESIGN}/timing.rpt

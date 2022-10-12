@@ -1,0 +1,7 @@
+/kits/tsmc/65nm/GP_stclib/10-track/tcbn65gplushpbwp-set/tcbn65gplushpbwp_140a_FE/TSMCHOME/digital/Front_End/verilog/tcbn65gplushpbwp_140a/tcbn65gplushpbwp.v
+../../../impl/out/mac_engine_layout.v
+../../../impl/out/mac_engine_synth_wrap.sv
+../../../../hwpe-stream/rtl/hwpe_stream_package.sv
+../../../../hwpe-stream/rtl/hwpe_stream_interfaces.sv
+../../../rtl/mac_package.sv
+../tb_aes_engine.sv

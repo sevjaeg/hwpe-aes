@@ -3,14 +3,13 @@ set DESIGN $::env(CADENCE_DESIGN)
 
 if {$DESIGN != "aes_cipher_top"} {
   set DESIGN_TOP ${DESIGN}_genus
-  setenv CADENCE_DESIGN=DESIGN_TOP
 } else {
   set DESIGN_TOP ${DESIGN}
 }
 
 set_multi_cpu_usage -local_cpu 8
 
-set DATE [clock format [clock seconds] -format "%b%d-%T"] 
+set DATE [clock format [clock seconds] -format "%b%d-%T"]
 
 set_db init_netlist_files ${_OUTPUTS_PATH}/${DESIGN}_synth.v
 set_db init_lef_files /kits/tsmc/65nm/GP_stclib/10-track/tcbn65gplushpbwp-set/tcbn65gplushpbwp_140a_FE/TSMCHOME/digital/Back_End/lef/tcbn65gplushpbwp_140a/lef/tcbn65gplushpbwp_6lmT1.lef
@@ -23,6 +22,7 @@ set_db init_ground_nets VSS
 set_db design_process_node 65
 
 read_mmmc scripts/mmmc.tcl
+
 read_physical -lef /kits/tsmc/65nm/GP_stclib/10-track/tcbn65gplushpbwp-set/tcbn65gplushpbwp_140a_FE/TSMCHOME/digital/Back_End/lef/tcbn65gplushpbwp_140a/lef/tcbn65gplushpbwp_6lmT1.lef
 read_netlist ${_OUTPUTS_PATH}/${DESIGN}_synth.v -top ${DESIGN_TOP}
 
@@ -75,7 +75,7 @@ report_skew_groups -out_file ${_REPORTS_PATH}/${DESIGN}/layout_skew_groups.rpt
 opt_design -post_cts -hold -report_dir ${_REPORTS_PATH}/${DESIGN}/layout_postcts_opt/
 
 add_fillers -base_cells {FILL16HPBWP FILL1HPBWP FILL2HPBWP FILL32HPBWP FILL4HPBWP FILL64HPBWP FILL8HPBWP} -density 0.7
-check_drc -limit 1000000 -out_file ${_REPORTS_PATH}/${DESIGN}/layout_drc_prefix.rpt
+check_drc -limit 10000 -out_file ${_REPORTS_PATH}/${DESIGN}/layout_drc_prefix.rpt
 add_fillers -fix_drc -base_cells {FILL16HPBWP FILL1HPBWP FILL2HPBWP FILL32HPBWP FILL4HPBWP FILL64HPBWP FILL8HPBWP} -density 0.7
 
 set_db timing_analysis_type ocv
@@ -93,11 +93,19 @@ opt_design -post_route -setup -hold -report_dir ${_REPORTS_PATH}/${DESIGN}/layou
 if {$DESIGN == "mac_engine"} {
     # fix remaining hold time violations (all these signals have fanout 1)
     set violations [get_nets a_i_data*]
+    set violations [add_to_collection $violations [get_nets a_i_valid]]
     set violations [add_to_collection $violations [get_nets b_i_data*]]
+    set violations [add_to_collection $violations [get_nets b_i_valid]]
     set violations [add_to_collection $violations [get_nets {ctrl_i[start]}]]
+    set violations [add_to_collection $violations [get_nets {ctrl_i[clear]}]]
+
+    # Might cause IMPSP-2020 which leads to ERROR IMPSP-2021. However, this only leads to not placed filler cells
+    # this should not be a problem
     foreach_in_collection net ${violations}  {
       eco_add_repeater -cells BUFFD2HPBWP -net [get_object_name ${net}]
     }
+    # larger fanout
+    eco_add_repeater -cells BUFFD8HPBWP -net {ctrl_i[enable]}
     route_eco
     route_eco -fix_drc
 }
@@ -110,8 +118,7 @@ check_metal_density -layer {M1 M2 M3 M4 M5 M6} -report ${_REPORTS_PATH}/${DESIGN
 set_metal_fill -layer M6 -active_spacing 1.0 -window_size 20.0 20.0 -window_step 10.0 10.0 -min_density 1 -max_density 90 -preferred_density 35
 set_metal_fill -layer M5 -active_spacing 1.0 -window_size 20.0 20.0 -window_step 10.0 10.0 -min_density 1 -max_density 90 -preferred_density 35
 
-# Via fill not working properly
-# Via density not in LEF file?
+# Via fill not working properly as via density not (correctly) in LEF file (?)
 #add_via_fill -layer {VIA1 VIA2 VIA3 VIA4 VIA5} -modes all
 add_metal_fill -layers {M5 M6} -timing_aware sta -slack_threshold 0.1
 
@@ -121,27 +128,12 @@ check_drc -limit 1000000 -out_file ${_REPORTS_PATH}/${DESIGN}/layout_drc.rpt
 check_metal_density -layer {M1 M2 M3 M4 M5 M6} -report ${_REPORTS_PATH}/${DESIGN}/layout_metal.rpt
 # check_cut_density -layer {VIA1 VIA2 VIA3 VIA4 VIA5} -out_file ${_REPORTS_PATH}/${DESIGN}_layout_via.rpt
 
-# netlist and sdf for post-layout simulation
-write_netlist ${_OUTPUTS_PATH}/${DESIGN}_layout.v
-write_sdf ${_OUTPUTS_PATH}/${DESIGN}_layout.sdf -gate_level_sim_model -recompute_delaycal
-
-write_do_lec -log_file ../$_REPORTS_PATH/${DESIGN}/lec_layout.log \
-             -golden_design ${_OUTPUTS_PATH}/${DESIGN}_synth.v \
-             -revised_design ${_OUTPUTS_PATH}/${DESIGN}_layout.v \
-             ${_OUTPUTS_PATH}/${DESIGN}_lec_layout.do
-
-# Write database to restore session later
-write_db -rc_extract -def ${_OUTPUTS_PATH}/${DESIGN}.dat
-
-# GDSII
-write_stream ${_OUTPUTS_PATH}/${DESIGN}.gds -map_file scripts/gds2.map -mode all
-
 report_clock_trees > $_REPORTS_PATH/${DESIGN}/layout_clock_tree.rpt
 report_area -detail > $_REPORTS_PATH/${DESIGN}/layout_area.rpt
-report_timing -nworst 10 -late > $_REPORTS_PATH/${DESIGN}/layout_timing_setup.rpt
-report_timing -nworst 10 -early > $_REPORTS_PATH/${DESIGN}/layout_timing_hold.rpt
-# report_power -out_file $_REPORTS_PATH/${DESIGN}/layout_power.rpt
-report_messages -all > $_REPORTS_PATH/${DESIGN}/layout_messages.rpt
+report_timing -nworst 50 -late > $_REPORTS_PATH/${DESIGN}/layout_timing_setup.rpt
+report_timing -nworst 50 -early > $_REPORTS_PATH/${DESIGN}/layout_timing_hold.rpt
+report_power -view TSMC65G_av_typ -out_file $_REPORTS_PATH/${DESIGN}/layout_power.rpt
+report_messages > $_REPORTS_PATH/${DESIGN}/layout_messages.rpt
 report_messages -suppressed > $_REPORTS_PATH/${DESIGN}/layout_messages_suppressed.rpt
 report_summary -out_dir $_REPORTS_PATH/${DESIGN}/summary/
 report_summary -no_html -out_file $_REPORTS_PATH/${DESIGN}/layout_summary.rpt
@@ -152,3 +144,23 @@ report_summary -no_html -out_file $_REPORTS_PATH/${DESIGN}/layout_summary.rpt
 # timing report for debug window
 report_timing -output_format gtd -max_paths 10000 -max_slack 1.0 -path_exceptions all -late > ${_REPORTS_PATH}/${DESIGN}/timing_setup.mtarpt
 report_timing -output_format gtd -max_paths 10000 -max_slack 1.0 -path_exceptions all -early > ${_REPORTS_PATH}/${DESIGN}/timing_hold.mtarpt
+
+# netlist and sdf for post-layout simulation
+write_netlist ${_OUTPUTS_PATH}/${DESIGN}_layout.v
+write_sdf ${_OUTPUTS_PATH}/${DESIGN}_layout.sdf -gate_level_sim_model -recompute_delaycal -target_application verilog -cell_timing nochecks -precision 5
+
+# TODO get this working
+write_do_lec -log_file ../$_REPORTS_PATH/${DESIGN}/lec_layout.log -flat -verbose \
+             -golden_design ${_OUTPUTS_PATH}/${DESIGN}_synth.v \
+             -revised_design ${_OUTPUTS_PATH}/${DESIGN}_layout.v \
+             ../../../${_OUTPUTS_PATH}/${DESIGN}_lec_layout.do \
+             -write_session ${_OUTPUTS_PATH}/${DESIGN}_layout_lec.session
+# GDSII
+write_stream ${_OUTPUTS_PATH}/${DESIGN}.gds -map_file scripts/gds2.map -mode all
+
+# Write database to restore session later
+write_db -rc_extract -def ${_OUTPUTS_PATH}/${DESIGN}_layout.dat
+
+puts "============================"
+puts "Implementation Finished ...."
+puts "============================"

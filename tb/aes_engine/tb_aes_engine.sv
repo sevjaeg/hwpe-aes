@@ -1,4 +1,4 @@
-`timescale 1ns / 10ps
+`timescale 1ns / 1ps
 
 import mac_package::*;
 
@@ -65,7 +65,6 @@ flags_engine_t flags;
 assign ctrl.clear = clr;
 assign ctrl.enable = enable;
 
-// todo post synth (sv wrapper)
 mac_engine dut(
     .clk_i (clk),
     .rst_ni (rst_n),
@@ -122,6 +121,7 @@ initial begin
     word_in = '0;
 
     repeat (2) @(posedge clk);
+    # 0.8
     rst_n = '1;
     repeat (2) @(posedge clk);
 
@@ -142,14 +142,14 @@ initial begin
         end while(!ready_word_in | !ready_key_in);
     end
 
-    repeat (200) @(posedge clk);
+    repeat (50) @(posedge clk);
     clk_active = 0;
     $display("\nCompleted %0d out of 16 checks with %0d errors.\n", j, errors);
 end
 
 initial begin
     while(clk_active) begin
-        #2 clk = ~clk;
+        #0.8 clk = ~clk;
     end
 end
 

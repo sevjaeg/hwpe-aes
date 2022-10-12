@@ -22,5 +22,4 @@ quietly WaveActivateNextPane {} 0
 
 add wave -hex -group TB /test/*
 add wave -hex -group DUT /test/dut/*
-add wave -hex -group U0 /test/dut/u0*
 
