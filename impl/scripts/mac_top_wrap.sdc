@@ -13,15 +13,16 @@ current_design ${SDC_DESIGN}
 
 set_operating_conditions _nominal_
 
-create_clock -name "clock" -period 2.4 -waveform {0.0 1.2} [get_ports clk_i]
-set_clock_transition 0.055 [get_clocks clock]
-set_clock_latency  0.07 [get_clocks clock]
-set_clock_uncertainty 0.02 [get_clocks clock]
+create_clock -name "clock" -period 2.2 -waveform {0.0 1.1} [get_ports clk_i]
+set_clock_transition 0.068 [get_clocks clock]
+set_clock_latency  0.2 [get_clocks clock]
+set_clock_uncertainty 0.04 [get_clocks clock]
 
 # neglect reset as asynchronous
 set_false_path -from [get_ports {rst_ni}]
 # neglect latch
-set_false_path -from [get_leaf_pins *i_regfile_latch/hwpe_ctrl_regfile_latch_i/MemContentx*d] -to [get_leaf_pins *i_regfile_latch/hwpe_ctrl_regfile_latch_i/MemContentx*q]
+set_false_path -to [get_leaf_pins *i_regfile_latch/hwpe_ctrl_regfile_latch_i/MemContentx*q]
+# -from [get_leaf_pins *i_regfile_latch/hwpe_ctrl_regfile_latch_i/MemContentx*d]
 
 # Create input collection without clk and rst
 set data_inputs [all_inputs]

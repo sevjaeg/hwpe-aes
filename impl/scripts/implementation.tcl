@@ -74,10 +74,6 @@ report_skew_groups -out_file ${_REPORTS_PATH}/${DESIGN}/layout_skew_groups.rpt
 
 opt_design -post_cts -hold -report_dir ${_REPORTS_PATH}/${DESIGN}/layout_postcts_opt/
 
-add_fillers -base_cells {FILL16HPBWP FILL1HPBWP FILL2HPBWP FILL32HPBWP FILL4HPBWP FILL64HPBWP FILL8HPBWP} -density 0.7
-check_drc -limit 10000 -out_file ${_REPORTS_PATH}/${DESIGN}/layout_drc_prefix.rpt
-add_fillers -fix_drc -base_cells {FILL16HPBWP FILL1HPBWP FILL2HPBWP FILL32HPBWP FILL4HPBWP FILL64HPBWP FILL8HPBWP} -density 0.7
-
 set_db timing_analysis_type ocv
 set_db timing_analysis_clock_propagation_mode sdc_control
 
@@ -106,9 +102,17 @@ if {$DESIGN == "mac_engine"} {
     }
     # larger fanout
     eco_add_repeater -cells BUFFD8HPBWP -net {ctrl_i[enable]}
-    route_eco
-    route_eco -fix_drc
 }
+
+# fillers before eco cause spurious violations
+add_fillers -base_cells {FILL16HPBWP FILL1HPBWP FILL2HPBWP FILL32HPBWP FILL4HPBWP FILL64HPBWP FILL8HPBWP} -density 0.7
+check_drc -limit 1000000 -out_file ${_REPORTS_PATH}/${DESIGN}/layout_drc_prefix.rpt
+add_fillers -fix_drc -base_cells {FILL16HPBWP FILL1HPBWP FILL2HPBWP FILL32HPBWP FILL4HPBWP FILL64HPBWP FILL8HPBWP} -density 0.7
+
+check_connectivity -out_file ${_REPORTS_PATH}/${DESIGN}/layout_connectivity_eco.rpt
+check_drc -limit 1000000 -out_file ${_REPORTS_PATH}/${DESIGN}/layout_drc_eco.rpt
+route_eco
+route_eco -fix_drc
 
 # layer 7 not used
 check_metal_density -layer {M1 M2 M3 M4 M5 M6} -report ${_REPORTS_PATH}/${DESIGN}/layout_metal_prefill.rpt
@@ -140,6 +144,8 @@ report_summary -no_html -out_file $_REPORTS_PATH/${DESIGN}/layout_summary.rpt
 
 # time_design -post_route -report_dir ${_REPORTS_PATH}/${DESIGN}/layout_timing_final
 # time_design -post_route -hold -report_dir ${_REPORTS_PATH}/${DESIGN}/layout_timing_final_hold
+
+# read_activity_file -format VCD -scope test/dut/u1 -start 5 -end 150 -block {} ../tb/aes_engine/post-layout/wave.vcd
 
 # timing report for debug window
 report_timing -output_format gtd -max_paths 10000 -max_slack 1.0 -path_exceptions all -late > ${_REPORTS_PATH}/${DESIGN}/timing_setup.mtarpt

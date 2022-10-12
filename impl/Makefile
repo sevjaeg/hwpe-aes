@@ -5,9 +5,13 @@ DESIGN := mac_engine
 # aes_cipher_top ok (timing, warnings, sims)
 # mac_engine ok (timing, warnings, sims)
 
+# TODO check system simulation (with mac_engine)
+
 # TODO energy consumption
 
 # TODO fix mac_top_wrap timing
+
+# TODO mac_engine filler issues
 
 # Note: mac_top_wrap does not pass post-synthesis simulation (likely due to an issue with the register file latch)
 
@@ -103,7 +107,7 @@ sta:
 	export CADENCE_DESIGN=$(DESIGN) && tempus -stylus -log $(LOG_DIR)/$(DESIGN)_tempus -files $(SCRIPT_DIR)/sta.tcl
 
 power:
-	export CADENCE_DESIGN=$(DESIGN) && innovus -stylus -log $(LOG_DIR)/(DESIGN)_innovus_power -files $(SCRIPT_DIR)/power.tcl
+	export CADENCE_DESIGN=$(DESIGN) && innovus -stylus -log $(LOG_DIR)/$(DESIGN)_innovus_power -files $(SCRIPT_DIR)/power.tcl
 
 logdir:
 	mkdir -p $(LOG_DIR)
