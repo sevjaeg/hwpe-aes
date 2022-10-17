@@ -136,7 +136,6 @@ report_clock_trees > $_REPORTS_PATH/${DESIGN}/layout_clock_tree.rpt
 report_area -detail > $_REPORTS_PATH/${DESIGN}/layout_area.rpt
 report_timing -nworst 50 -late > $_REPORTS_PATH/${DESIGN}/layout_timing_setup.rpt
 report_timing -nworst 50 -early > $_REPORTS_PATH/${DESIGN}/layout_timing_hold.rpt
-report_power -view TSMC65G_av_typ -out_file $_REPORTS_PATH/${DESIGN}/layout_power.rpt
 report_messages > $_REPORTS_PATH/${DESIGN}/layout_messages.rpt
 report_messages -suppressed > $_REPORTS_PATH/${DESIGN}/layout_messages_suppressed.rpt
 report_summary -out_dir $_REPORTS_PATH/${DESIGN}/summary/
@@ -144,8 +143,6 @@ report_summary -no_html -out_file $_REPORTS_PATH/${DESIGN}/layout_summary.rpt
 
 # time_design -post_route -report_dir ${_REPORTS_PATH}/${DESIGN}/layout_timing_final
 # time_design -post_route -hold -report_dir ${_REPORTS_PATH}/${DESIGN}/layout_timing_final_hold
-
-# read_activity_file -format VCD -scope test/dut/u1 -start 5 -end 150 -block {} ../tb/aes_engine/post-layout/wave.vcd
 
 # timing report for debug window
 report_timing -output_format gtd -max_paths 10000 -max_slack 1.0 -path_exceptions all -late > ${_REPORTS_PATH}/${DESIGN}/timing_setup.mtarpt

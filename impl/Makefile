@@ -106,8 +106,10 @@ check-pnr:
 sta:
 	export CADENCE_DESIGN=$(DESIGN) && tempus -stylus -log $(LOG_DIR)/$(DESIGN)_tempus -files $(SCRIPT_DIR)/sta.tcl
 
+# -batch
 power:
-	export CADENCE_DESIGN=$(DESIGN) && innovus -stylus -log $(LOG_DIR)/$(DESIGN)_innovus_power -files $(SCRIPT_DIR)/power.tcl
+	export CADENCE_DESIGN=$(DESIGN) && voltus -stylus -no_gui -batch -log $(LOG_DIR)/$(DESIGN)_voltus \
+	                                          -files $(SCRIPT_DIR)/power.tcl
 
 logdir:
 	mkdir -p $(LOG_DIR)
@@ -123,10 +125,13 @@ clean-tools:
 	rm -rf rtl_*_db
 	rm -rf timingReports checkDesign
 	rm -rf .timing_file*
+	rm -f voltus_power_missing_netnames.rpt
+	rm -f .powerAnalysis.pinfo
 	
 clean: clean-tools	
 	rm -rf fv fv*/
 	rm -rf $(OUT_DIR) $(REPORT_DIR) $(TMP_DIR)
 	rm -f .*.timestamp .*.tstamp
+	
 	
 .PHONY: all clean clean-tools synth synth-gui pnr pnr-gui logdir
