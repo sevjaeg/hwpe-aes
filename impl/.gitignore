@@ -21,5 +21,6 @@ genus2invs*
 mp_data
 .timing_file*
 scheduling_file.*
+*.pinfo
 
 tcbn65gplushpbwp.v
