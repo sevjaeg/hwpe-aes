@@ -308,6 +308,9 @@ As the PULPissimo SoC has been taped out several times~\cite{pulp-chips}, the in
 
 \subsection{Verification} \label{sec:asic:verification}
 
+\todo{where to place this?}
+After synthesising the whole HWPE and embedding it into the PULPissimo testbench, simulation errors occur. Those are related to the control circuitry as the base address for the HWPE memory accesses is zero (instead of the address passed in the program). Likely, this issue is related to the register file in the HWPE control section which is implemented as latch. Unfortunately, no solution was found for this problem in reasonable time, thus the ASIC synthesis in this project is limited to the HWPE datapath.
+
 \subsection{Results} \label{sec:asic:results}
 
 

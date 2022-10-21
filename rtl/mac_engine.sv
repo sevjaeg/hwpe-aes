@@ -103,7 +103,7 @@ module mac_engine
 
   assign out_ready = d_o.ready;
 
-  assign aes_start = word_chained_valid & key_valid & aes_ready;
+  assign aes_start = !aes_busy & aes_ready & key_valid & word_chained_valid;
 
   assign word_chained = r_aes_out ^ word;
   assign word_chained_valid = word_valid & aes_reg_valid;
@@ -193,9 +193,8 @@ module mac_engine
   // In the following:
   // R_valid & R_ready denominate the handshake at the *output* (Q port) of pipe register R
 
-  // the other stackers valid signal is important in case the data does not
-  // arrive simultaneously
-  assign word_ready = !aes_busy & aes_ready & key_valid;
-  assign key_ready = !aes_busy & aes_ready & word_chained_valid;
+  // valid handshake to ensure
+  assign word_ready = aes_start;
+  assign key_ready = aes_start;
   
 endmodule // mac_engine

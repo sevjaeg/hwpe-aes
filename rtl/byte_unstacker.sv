@@ -46,11 +46,13 @@ begin : ff
 end
 
 assign ready_o = ~filled_r;
-assign valid_o = filled_r & ready_i;
+assign valid_o = filled_r;
 
 always_comb
 begin
-    if (filled_r & ready_i) begin
+    next_cnt <= {1'b0, cnt_r};
+    word_o <= 32'b0;
+    if (filled_r) begin
         case(cnt_r)
             0: begin
                 word_o <= stack_r[127:96];
@@ -65,10 +67,9 @@ begin
                 word_o <= stack_r[31:0];
             end
         endcase
-        next_cnt <= cnt_r + 1;
-    end else begin
-        next_cnt <= {1'b0, cnt_r};
-        word_o <= 32'b0;
+        if (ready_i) begin
+            next_cnt <= cnt_r + 1;
+        end
     end
 end
 

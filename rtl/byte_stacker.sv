@@ -38,7 +38,7 @@ begin : ff
         byte_cnt_r  <= byte_cnt_r;
         done_r <= done_r;
 
-        if (valid_i & ~done_r) begin
+        if (valid_i & (ready_i | ~done_r)) begin
             case(byte_cnt_r)
                 0: begin
                     byte_cnt_r <= 2'd1;

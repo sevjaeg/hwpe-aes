@@ -108,6 +108,7 @@ sta:
 
 # -batch
 power:
+	# todo check design
 	export CADENCE_DESIGN=$(DESIGN) && voltus -stylus -no_gui -batch -log $(LOG_DIR)/$(DESIGN)_voltus \
 	                                          -files $(SCRIPT_DIR)/power.tcl
 

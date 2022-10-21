@@ -30,21 +30,22 @@ integer       i;
 integer       j;
 integer       k;
 integer       errors;
+logic         test_1_done = 0;
 
 hwpe_stream_intf_stream #(
     .DATA_WIDTH(32)
 ) a (
-    .clk ( clk_i )
+    .clk ( clk )
 );
 hwpe_stream_intf_stream #(
     .DATA_WIDTH(32)
 ) b (
-    .clk ( clk_i )
+    .clk ( clk )
 );
 hwpe_stream_intf_stream #(
     .DATA_WIDTH(32)
 ) d (
-    .clk ( clk_i )
+    .clk ( clk )
 );
 
 assign a.valid = valid_word_in;
@@ -121,25 +122,49 @@ initial begin
     word_in = '0;
 
     repeat (2) @(posedge clk);
-    # 0.8
+    @(negedge clk);
     rst_n = '1;
     repeat (1) @(posedge clk);
     ready_out = 1;
     repeat (1) @(posedge clk);
 
-    $display("\nTest start @%t", $time);
+    $display("\nSingle word test start @%t", $realtime);
+
+    for (i=0; i<4; i=i+1) begin
+        word_in = test_vector_word[i];
+        key_in = test_vector_key[i%4];
+        valid_word_in = 1;
+        valid_key_in = 1;
+        do begin
+            @(posedge clk);
+            if(valid_word_in & ready_word_in) begin
+                valid_word_in = 0;
+            end
+            if(ready_key_in) begin
+                valid_key_in = 0;
+            end
+        end while(!ready_word_in | !ready_key_in);
+    end
+    
+    @(test_1_done == 1);
+    @(negedge clk);
+    rst_n = '0;
+    repeat (2) @(posedge clk);
+    @(negedge clk);
+    rst_n = '1;
+    repeat (1) @(posedge clk);
+    $display("\n Short Pipeline test @%t", $realtime);
 
     for (i=0; i<16; i=i+1) begin
         word_in = test_vector_word[i];
         key_in = test_vector_key[i%4];
         valid_word_in = 1;
-        @(posedge clk);
         valid_key_in = 1;
-        if(ready_word_in) begin
-            valid_word_in = 0;
-        end
         do begin
             @(posedge clk);
+            if(ready_word_in) begin
+                valid_word_in = 0;
+            end
             if(ready_key_in) begin
                 valid_key_in = 0;
             end
@@ -158,14 +183,21 @@ initial begin
     errors = 0;
     $display("\nStarting AES engine testbench\n");
     while(clk_active) begin
-        if (j == 16) begin
-          $display("\nTest stop @%t", $time);
+        if (!test_1_done & j == 4) begin
+            $display("\nTest stop @%t, %0d errors (%0d checks)", $realtime, errors, j);
+            $display("Update these times in impl/scripts/power.tcl\n");
+            test_1_done = 1;
+            j = 0;
+        end else
+        if (test_1_done & j == 16) begin
+          $display("\nTest stop @%t, %0d errors (%0d checks)", $realtime, errors, j);
+          $display("Update these times in impl/scripts/power.tcl\n");
           clk_active = 0;
         end
         @(posedge clk);
-        if (valid_out) begin
+        if (valid_out & ready_out) begin
             if(word_out != test_vector_out[j]) begin
-                $display("ERROR @%t ns: output=%h expect=%h", $time, word_out, test_vector_out[j]);
+                $display("ERROR @%t ns: output=%h expect=%h", $realtime, word_out, test_vector_out[j]);
                 errors = errors + 1;
             end
             j = j + 1;

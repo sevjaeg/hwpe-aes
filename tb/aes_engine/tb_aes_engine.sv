@@ -157,7 +157,7 @@ initial begin
     k = 0;
     while(clk_active) begin
         @(posedge clk);
-        if ((k % 7 == 0) || (k % 11== 0)) begin
+        if ((k % 7 == 0) || (k % 12== 0)) begin
             # 0.1
             ready_out = ~ready_out;
         end
@@ -171,7 +171,7 @@ initial begin
     $display("\nStarting AES engine testbench\n");
     while(clk_active) begin
         @(posedge clk);
-        if (valid_out) begin
+        if (valid_out & ready_out) begin
             if(word_out != test_vector_out[j]) begin
                 $display("ERROR @%t ns: output=%h expect=%h", $time, word_out, test_vector_out[j]);
                 errors = errors + 1;
