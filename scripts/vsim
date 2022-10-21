@@ -1,0 +1,39 @@
+#!/bin/bash
+RET=""
+for var in "$@"
+do
+if [[ $var == -* ]]
+then
+RET="${RET}$var "
+else
+RET="${RET}'"
+RET="${RET}$var"
+RET="${RET}' "
+fi
+done
+
+#echo "$RET"
+
+ENV=""
+for var in "$VSIM_RUNNER_FLAGS"
+do
+if [[ $var == -* ]]
+then
+ENV="${ENV}$var "
+elif [[ $var == +* ]]
+then
+ENV="${ENV}$var "
+else
+ENV="${ENV}'"
+ENV="${ENV}$var"
+ENV="${ENV}' "
+fi
+done
+
+#echo "$ENV"
+
+#echo "$(pwd)"
+
+#env
+
+sshpass -f ~/eda03 ssh -X sjaeger@eda03.ict.tuwien.ac.at "cd $(pwd) && export VSIM_RUNNER_FLAGS=\"$ENV\" && echo $VSIM_RUNNER_FLAGS && vsim -i $RET"
