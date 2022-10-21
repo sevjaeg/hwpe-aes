@@ -1,2 +1,14 @@
-*.pyc
+# HW Simulation
 *.vcd
+
+# SW build output
+build/
+*.pyc
+
+# IDEs
+.vscode/
+
+# LaTeX artifacts
+*.bak
+
+

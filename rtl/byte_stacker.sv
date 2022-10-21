@@ -19,7 +19,7 @@ logic done_r;
 
 assign valid_o = done_r;
 assign word_o = stack_r;
-assign ready_o = ~done_r;
+assign ready_o = ready_i | ~done_r;
 
 always_ff @(posedge clk_i or negedge rst_ni)
 begin : ff

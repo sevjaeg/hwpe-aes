@@ -1,0 +1,6 @@
+hwme_x86
+
+# vsim files
+transcript
+*.vstf
+
