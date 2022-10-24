@@ -140,7 +140,7 @@ initial begin
     $display("\nStarting stack/unstack testbench\n");
     while(clk_active) begin
         @(posedge clk);
-        if (valid_out) begin
+        if (valid_out & ready_out) begin
             if(word_out != test_vectors[j]) begin
                 $display("ERROR @%t ns: output=%h expect=%h", $time, word_out, test_vectors[j]);
                 errors = errors + 1;
@@ -148,7 +148,7 @@ initial begin
             j = j + 1;
         end
     end
-    $display("\nCompleted %d out of 8 checks with %d errors.\n", j, errors);
+    $display("\nCompleted %0d out of 8 checks with %0d errors.\n", j, errors);
 end
 
 endmodule

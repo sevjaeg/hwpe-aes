@@ -1,3 +1,0 @@
-../../rtl/byte_stacker.sv
-../../rtl/byte_unstacker.sv
-tb_byte_stacker.sv
