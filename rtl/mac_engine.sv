@@ -40,17 +40,17 @@ module mac_engine
   logic signed [127:0] aes_out;
   logic signed [127:0] r_aes_out;
   logic signed [31:0]  out_word;
-  logic               word_valid, word_chained_valid;
-  logic               word_ready;
-  logic               key_valid;
-  logic               key_ready;
-  logic               aes_valid;
-  logic               aes_reg_valid;
-  logic               aes_ready;
-  logic               aes_start;
-  logic               aes_busy;
-  logic               out_valid;
-  logic               out_ready;
+  logic                word_valid, word_chained_valid;
+  logic                word_ready;
+  logic                key_valid;
+  logic                key_ready;
+  logic                aes_valid;
+  logic                aes_reg_valid;
+  logic                aes_ready;
+  logic                aes_start;
+  logic                aes_busy;
+  logic                out_valid;
+  logic                out_ready;
 
   aes_cipher_top i_aes(
     .clk (clk_i),
@@ -103,8 +103,9 @@ module mac_engine
 
   assign out_ready = d_o.ready;
 
-  assign aes_start = !aes_busy & aes_ready & key_valid & word_chained_valid;
+  assign aes_start = (~aes_busy) & aes_ready & key_valid & word_chained_valid;
 
+  // Cipher block chaining (CBC)
   assign word_chained = r_aes_out ^ word;
   assign word_chained_valid = word_valid & aes_reg_valid;
 
@@ -151,7 +152,7 @@ module mac_engine
   end
 
   always_comb
-  begin
+  begin : set_output
     d_o.data  = $signed(out_word);
     d_o.valid = ctrl_i.enable & out_valid;
     d_o.strb  = '1; // for now, strb is always '1
@@ -162,12 +163,12 @@ module mac_engine
   // FSMs that is typically the most advantageous choice.
 
   always_comb
-  begin
+  begin : update_cnt
     cnt = r_cnt + 1;
   end
 
   always_ff @(posedge clk_i or negedge rst_ni)
-  begin
+  begin: ctrl
     if(~rst_ni) begin
       r_cnt <= '0;
     end

@@ -5,13 +5,7 @@ DESIGN := mac_engine
 # aes_cipher_top ok (timing, warnings, sims)
 # mac_engine ok (timing, warnings, sims)
 
-# TODO check system simulation (with mac_engine)
-
-# TODO energy consumption
-
-# TODO fix mac_top_wrap timing
-
-# TODO mac_engine filler issues
+# TODO check mac_top_wrap timing
 
 # Note: mac_top_wrap does not pass post-synthesis simulation (likely due to an issue with the register file latch)
 
@@ -106,9 +100,8 @@ check-pnr:
 sta:
 	export CADENCE_DESIGN=$(DESIGN) && tempus -stylus -log $(LOG_DIR)/$(DESIGN)_tempus -files $(SCRIPT_DIR)/sta.tcl
 
-# -batch
 power:
-	# todo check design
+	# TODO check design
 	export CADENCE_DESIGN=$(DESIGN) && voltus -stylus -no_gui -batch -log $(LOG_DIR)/$(DESIGN)_voltus \
 	                                          -files $(SCRIPT_DIR)/power.tcl
 
@@ -135,4 +128,4 @@ clean: clean-tools
 	rm -f .*.timestamp .*.tstamp
 	
 	
-.PHONY: all clean clean-tools synth synth-gui pnr pnr-gui logdir
+.PHONY: all clean clean-tools synth synth-gui pnr pnr-gui logdir check-synth check-pnr power sta
