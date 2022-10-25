@@ -1,4 +1,4 @@
-<mxfile host="app.diagrams.net" modified="2022-10-25T08:00:26.354Z" agent="5.0 (Windows)" etag="EtGrh6USy5pK_po1F7jd" version="20.2.0" type="github">
+<mxfile host="app.diagrams.net" modified="2022-10-25T08:02:10.847Z" agent="5.0 (Windows)" etag="_-QaxSWFgHkj0hnVJixO" version="20.2.0" type="github">
   <diagram id="dOO12XR693nd055LhPkE" name="Seite-1">
     <mxGraphModel dx="1422" dy="786" grid="1" gridSize="5" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" background="none" math="0" shadow="0">
       <root>
@@ -34,7 +34,7 @@
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="vXIilpLbq_1SYXJ3mb19-23" value="&lt;div&gt;.v, .sv &lt;br&gt;&lt;/div&gt;" style="edgeLabel;html=1;align=center;verticalAlign=top;resizable=0;points=[];fontSize=10;fontFamily=lmodern;labelPosition=right;verticalLabelPosition=bottom;spacingRight=11;" vertex="1" connectable="0" parent="vXIilpLbq_1SYXJ3mb19-17">
+        <mxCell id="vXIilpLbq_1SYXJ3mb19-23" value="&lt;div style=&quot;font-size: 9px;&quot;&gt;.v, .sv &lt;br style=&quot;font-size: 9px;&quot;&gt;&lt;/div&gt;" style="edgeLabel;html=1;align=center;verticalAlign=top;resizable=0;points=[];fontSize=9;fontFamily=lmodern;labelPosition=right;verticalLabelPosition=bottom;spacingRight=11;" vertex="1" connectable="0" parent="vXIilpLbq_1SYXJ3mb19-17">
           <mxGeometry x="-0.1286" relative="1" as="geometry">
             <mxPoint y="-1" as="offset" />
           </mxGeometry>
@@ -60,7 +60,7 @@
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="vXIilpLbq_1SYXJ3mb19-25" value="&lt;div&gt;.lef&lt;/div&gt;" style="edgeLabel;html=1;align=center;verticalAlign=top;resizable=0;points=[];fontSize=10;fontFamily=lmodern;labelPosition=left;verticalLabelPosition=bottom;" vertex="1" connectable="0" parent="vXIilpLbq_1SYXJ3mb19-15">
+        <mxCell id="vXIilpLbq_1SYXJ3mb19-25" value="&lt;div style=&quot;font-size: 9px;&quot;&gt;.lef&lt;/div&gt;" style="edgeLabel;html=1;align=center;verticalAlign=top;resizable=0;points=[];fontSize=9;fontFamily=lmodern;labelPosition=left;verticalLabelPosition=bottom;" vertex="1" connectable="0" parent="vXIilpLbq_1SYXJ3mb19-15">
           <mxGeometry x="-0.1153" y="-1" relative="1" as="geometry">
             <mxPoint x="-6" as="offset" />
           </mxGeometry>
@@ -68,7 +68,7 @@
         <mxCell id="vXIilpLbq_1SYXJ3mb19-20" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontFamily=lmodern;fontSize=10;" edge="1" parent="1" source="vXIilpLbq_1SYXJ3mb19-18" target="vXIilpLbq_1SYXJ3mb19-1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="vXIilpLbq_1SYXJ3mb19-24" value="&lt;div&gt;.mmmc&lt;/div&gt;" style="edgeLabel;html=1;align=right;verticalAlign=bottom;resizable=0;points=[];fontSize=10;fontFamily=lmodern;labelPosition=left;verticalLabelPosition=top;spacingLeft=0;spacingRight=2;" vertex="1" connectable="0" parent="vXIilpLbq_1SYXJ3mb19-20">
+        <mxCell id="vXIilpLbq_1SYXJ3mb19-24" value="&lt;div style=&quot;font-size: 9px;&quot;&gt;.mmmc&lt;/div&gt;" style="edgeLabel;html=1;align=right;verticalAlign=bottom;resizable=0;points=[];fontSize=9;fontFamily=lmodern;labelPosition=left;verticalLabelPosition=top;spacingLeft=0;spacingRight=2;" vertex="1" connectable="0" parent="vXIilpLbq_1SYXJ3mb19-20">
           <mxGeometry x="-0.2067" relative="1" as="geometry">
             <mxPoint x="1" y="-2" as="offset" />
           </mxGeometry>
@@ -258,7 +258,7 @@
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="vXIilpLbq_1SYXJ3mb19-74" value=".sv" style="edgeLabel;html=1;align=right;verticalAlign=bottom;resizable=0;points=[];fontSize=9;fontFamily=lmodern;labelPosition=left;verticalLabelPosition=top;" vertex="1" connectable="0" parent="vXIilpLbq_1SYXJ3mb19-58">
+        <mxCell id="vXIilpLbq_1SYXJ3mb19-74" value=".sv" style="edgeLabel;html=1;align=right;verticalAlign=bottom;resizable=0;points=[];fontSize=9;fontFamily=lmodern;labelPosition=left;verticalLabelPosition=top;spacingBottom=1;" vertex="1" connectable="0" parent="vXIilpLbq_1SYXJ3mb19-58">
           <mxGeometry x="-0.209" y="1" relative="1" as="geometry">
             <mxPoint as="offset" />
           </mxGeometry>
