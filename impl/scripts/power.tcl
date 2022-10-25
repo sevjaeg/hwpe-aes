@@ -13,7 +13,7 @@ set_db power_method dynamic_vectorbased
 set_db power_worst_step_size 800ps
 set_db power_default_frequency 625
 
-read_activity_file -format VCD -scope test/dut/u1 -start 5.6 -end 108.0 -block {} ../tb/aes_engine/post-layout-power/wave.vcd
+read_activity_file -format VCD -scope test/dut/u1 -start 44.0 -end 27903.2 -block {} ../tb/aes_engine/post-layout-power/wave.vcd
 # report_vector_profile -steps 800ps -detailed_report true -emulate_sdf true -out_file $_REPORTS_PATH/${DESIGN}/layout_power_vcd.rpt
 
 set_db power_method vector_profile

@@ -1,0 +1,105 @@
+*----------------------------------------------------------------------------------------
+*	Voltus Power Analysis - Power Calculator - Version v20.11-s014_1 64-bit (08/10/2020 16:19:31)
+*	Copyright 2007, Cadence Design Systems, Inc.
+*
+* 	Date & Time:	2022-Oct-25 11:14:25 (2022-Oct-25 09:14:25 GMT)
+*
+*----------------------------------------------------------------------------------------
+*
+*	Design: mac_engine_genus
+*
+*	Liberty Libraries used: 
+*	        /home/sjaeger/pulpissimo/ips/hwpe-mac-engine/impl/out/mac_engine_layout.dat/libs/mmmc/tcbn65gplushpbwptc_ccst.lib
+*
+*	Power Domain used: 
+*              Rail:        VDD      Voltage:          1 
+*
+*	Parasitic Files used: 
+*	        design.spef1
+*
+*	DEF Files used: 
+*	        /tmp/ssv_tmpdir_1649697_9sYqhc/eps_out_1649697.def.gz
+*
+*	Switching Activity File used: 
+*	        ../tb/aes_engine/post-layout-power/wave.vcd
+*                    Vcd Window used(Start Time, Stop Time):  (44.000001,27903.200789) 
+*                     Vcd Scale Factor: 1 
+* *                    Design annotation coverage: 11531/11531 = 100% 
+*
+*       Hierarchical Global Activity: N.A.
+*
+*       Global Activity: N.A.
+*
+*       Sequential Element Activity: 0.200000
+*
+*       Primary Input Activity: N.A.
+*
+*       Default icg ratio: N.A.
+*
+*       Global Comb ClockGate Ratio: N.A.
+*
+*	Power Units = 1mW
+*
+*	Time Units = 1e-09 secs 
+*
+*       report_power -format detailed -time_based_report -nworst 50 -outfile vectorprofile.report 
+*
+-----------------------------------------------------------------------------------------
+
+
+Total Power 
+-----------------------------------------------------------------------------------------
+Total Internal Power:        9.89947183 	   63.3468%
+Total Switching Power:       5.44793358 	   34.8614%
+Total Leakage Power:         0.28002561 	    1.7919%
+Total X Tran Power:      	    0.0000
+Total Z Tran Power:      	    0.0000
+Total Power:                15.62743100 
+-----------------------------------------------------------------------------------------
+
+
+Group                           Internal   Switching     Leakage       Total  Percentage 
+                                Power      Power         Power         Power  (%)        
+-----------------------------------------------------------------------------------------
+Sequential                         7.068      0.9587     0.06061       8.087       51.75 
+Macro                                  0           0           0           0           0 
+IO                                     0           0           0           0           0 
+Combinational                      2.449       3.383       0.217       6.049        38.7 
+Clock (Combinational)             0.3825       1.107    0.002453       1.492       9.544 
+Clock (Sequential)                     0           0           0           0           0 
+-----------------------------------------------------------------------------------------
+Total                              9.899       5.448        0.28       15.63         100 
+-----------------------------------------------------------------------------------------
+
+
+Clock                           Internal   Switching     Leakage       Total  Percentage 
+                                Power      Power         Power         Power  (%)        
+-----------------------------------------------------------------------------------------
+clock                              9.899       5.448        0.28       15.63         100 
+-----------------------------------------------------------------------------------------
+Total (excluding duplicates)       9.899       5.448        0.28       15.63         100 
+-----------------------------------------------------------------------------------------
+
+Clock: clock
+Clock Period:       0.001599999844 usec 
+Clock Toggle Rate:  1250.0001 MHz 
+Clock Static Probability:  0.5000
+
+
+Rail                  Voltage   Internal   Switching     Leakage       Total  Percentage 
+                                Power      Power         Power         Power  (%)        
+-----------------------------------------------------------------------------------------
+VDD                         1      9.899       5.448        0.28       15.63         100 
+
+
+-----------------------------------------------------------------------------------------
+*	Power Distribution Summary: 
+*                Highest Average Power:       CTS_ccl_a_buf_00044 (CKBD16HPBWP):           0.1103 
+*                Highest Leakage Power:       CTS_ccl_a_buf_00050 (CKBD16HPBWP):        0.0001752 
+*          Total Cap:      8.27134e-11 F
+*          Total instances in design: 11404
+*          Total instances in design with no power:     0
+*          Total instances in design with no activity:     0
+*          Total Fillers and Decap:     0
+-----------------------------------------------------------------------------------------
+

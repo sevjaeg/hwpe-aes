@@ -1,13 +1,6 @@
 # Supported entities: aes_cipher_top, mac_engine, mac_top_wrap
-DESIGN := mac_engine
-
-# TODO re-check impl warnings
-# aes_cipher_top ok (timing, warnings, sims)
-# mac_engine ok (timing, warnings, sims)
-
-# TODO check mac_top_wrap timing
-
 # Note: mac_top_wrap does not pass post-synthesis simulation (likely due to an issue with the register file latch)
+DESIGN := mac_engine
 
 RTL_DIR := ../rtl
 LOG_DIR := logs
@@ -87,21 +80,30 @@ synth-gui: synth
 
 pnr: logdir .pnr-$(DESIGN).timestamp
 
-pnr-gui: 
+pnr-gui: pnr
 	export CADENCE_DESIGN=$(DESIGN) && innovus -stylus -log ./$(LOG_DIR)/$(DESIGN)_innovus_gui -files $(SCRIPT_DIR)/innovus_gui.tcl
 
 check-synth: synth
 	lec -XL -NOGui -Color -Dofile $(OUT_DIR)/$(DESIGN)_lec_synth.do
 
-# TODO test
-check-pnr:
+check-pnr: pnr
 	lec -XL -NOGui -Color -Dofile $(OUT_DIR)/$(DESIGN)_lec_layout.do
 
+# just for testing reasons
 sta:
 	export CADENCE_DESIGN=$(DESIGN) && tempus -stylus -log $(LOG_DIR)/$(DESIGN)_tempus -files $(SCRIPT_DIR)/sta.tcl
 
 power:
-	# TODO check design
+ifneq ($(DESIGN), mac_engine)
+$(error Invalid design $(DESIGN). Power estimation only supported for mac_engine)
+endif
+	@echo ""
+	@echo "----------------------------------------------------------------------------------------"
+	@echo "| Make sure you ran 'make cli' in tb/mac_engine/post-layout-power to have an           |"
+	@echo "| up-to-date .vcd file and set the respective start and end times in scripts/power.tcl |"
+	@echo "----------------------------------------------------------------------------------------"
+	@echo ""
+	
 	export CADENCE_DESIGN=$(DESIGN) && voltus -stylus -no_gui -batch -log $(LOG_DIR)/$(DESIGN)_voltus \
 	                                          -files $(SCRIPT_DIR)/power.tcl
 
@@ -126,6 +128,5 @@ clean: clean-tools
 	rm -rf fv fv*/
 	rm -rf $(OUT_DIR) $(REPORT_DIR) $(TMP_DIR)
 	rm -f .*.timestamp .*.tstamp
-	
-	
+
 .PHONY: all clean clean-tools synth synth-gui pnr pnr-gui logdir check-synth check-pnr power sta

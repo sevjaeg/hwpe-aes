@@ -2,9 +2,17 @@
 
 Project for 384.178 SoC Design Lab (2021W) and 384.180 SoC Advanced (2022S)
 
-## Hardware
+## Credits
 
-This design is heavily based on the [Hardware MAC Engine](https://github.com/pulp-platform/hwpe-mac-engine) provided by the PULP platform.
+This project is based on [PULPissmo](https://github.com/pulp-platform/pulpissimo) (as of [September 29, 2021](https://github.com/pulp-platform/pulpissimo/commit/3c9bde1b539679401d4e204716c43bf9422e026d)) including the PULP [Hardware MAC Engine](https://github.com/pulp-platform/hwpe-mac-engine) and the [PULP Runtime Examples](https://github.com/pulp-platform/pulp-rt-examples). The required tools were kindly provided by the [Institute of Computer Technology at TU Wien](https://www.ict.tuwien.ac.at/).
+
+aes sw and hw
+
+## Goal
+
+- open source
+- low power
+- security
 
 ## Simulation
 
@@ -43,7 +51,7 @@ Runtime 32 encryptions (N=8): 2869 us (89.7 us/op)
 ## Hardware Implementation
 
 ```
-cd ~/pulpissimo/aes/aes_sw_hwpe
+cd ~/pulpissimo/ips/hwpe-mac-engine/sw/aes_sw_hwpe
 make clean all run
 size build/hwme.c/pulpissimo/hwme/hwme
 ```
@@ -149,9 +157,10 @@ $OPENOCD/bin/openocd -f ~/pulpissimo_local/fpga/pulpissimo-genesys2/openocd-gene
 Compile the software and start a `gdb` session
 
 ```
+cd pulpissimo
 source pulp-sdk/configs/pulpissimo.sh
 source pulp-sdk/configs/fpgas/pulpissimo/genesys2.sh
-cd aes/aes_sw_hwpe/
+cd /ips/hwpe-mac-engine/sw/aes_sw_hwpe/
 make clean all
 $PULP_RISCV_GCC_TOOLCHAIN/bin/riscv32-unknown-elf-gdb build/hwme.c/pulpissimo/hwme/hwme
 ```
@@ -166,6 +175,15 @@ continue
 ```
 
 Connect the UART connector (J15) to get serial output. Set the Baud rate to 230400.
+
+### Post-Synthesis Simulation
+
+```
+cp ips/hwpe-mac-engine/scripts/hwpe-mac-engine.mk sim/vcompile/ips/hwpe-mac-engine.mk 
+make clean build
+```
+
+Note that this has to be redone after running `make scripts`
 
 ## Notes
 

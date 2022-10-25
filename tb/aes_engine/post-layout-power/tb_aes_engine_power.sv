@@ -6,6 +6,9 @@ module test(
 
 );
 
+// number of AES128 words
+localparam PIPELINE_TEST_LEN = 1024;
+
 logic         clk = 0;
 logic         clk_active = 1;
 
@@ -155,8 +158,8 @@ initial begin
     repeat (1) @(posedge clk);
     $display("\n Short Pipeline test @%t", $realtime);
 
-    for (i=0; i<16; i=i+1) begin
-        word_in = test_vector_word[i];
+    for (i=0; i<4*PIPELINE_TEST_LEN; i=i+1) begin
+        word_in = test_vector_word[i%16];
         key_in = test_vector_key[i%4];
         valid_word_in = 1;
         valid_key_in = 1;
@@ -189,7 +192,7 @@ initial begin
             test_1_done = 1;
             j = 0;
         end else
-        if (test_1_done & j == 16) begin
+        if (test_1_done & j == 4*PIPELINE_TEST_LEN) begin
           $display("\nTest stop @%t, %0d errors (%0d checks)", $realtime, errors, j);
           $display("Update these times in impl/scripts/power.tcl\n");
           clk_active = 0;

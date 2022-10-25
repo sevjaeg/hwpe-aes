@@ -152,8 +152,7 @@ report_timing -output_format gtd -max_paths 10000 -max_slack 1.0 -path_exception
 write_netlist ${_OUTPUTS_PATH}/${DESIGN}_layout.v
 write_sdf ${_OUTPUTS_PATH}/${DESIGN}_layout.sdf -gate_level_sim_model -recompute_delaycal -target_application verilog -cell_timing nochecks -precision 5
 
-# TODO get this working
-write_do_lec -log_file ../$_REPORTS_PATH/${DESIGN}/lec_layout.log -flat -verbose \
+write_do_lec -log_file ${_REPORTS_PATH}/${DESIGN}/lec_layout.log -flat -verbose \
              -golden_design ${_OUTPUTS_PATH}/${DESIGN}_synth.v \
              -revised_design ${_OUTPUTS_PATH}/${DESIGN}_layout.v \
              ../../../${_OUTPUTS_PATH}/${DESIGN}_lec_layout.do \
