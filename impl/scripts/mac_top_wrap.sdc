@@ -22,6 +22,7 @@ set_clock_uncertainty 0.04 [get_clocks clock]
 set_false_path -from [get_ports {rst_ni}]
 # neglect latch
 set_false_path -to [get_leaf_pins *i_regfile_latch/hwpe_ctrl_regfile_latch_i/MemContentxDP*d]
+set_false_path -from [get_leaf_pins *i_regfile_latch/hwpe_ctrl_regfile_latch_i/MemContentxDP*q]
 # -from [get_leaf_pins *i_regfile_latch/hwpe_ctrl_regfile_latch_i/MemContentx*d]
 
 # Create input collection without clk and rst

@@ -1,10 +1,80 @@
 # AES Hardware Processing Engine
 
-Project for 384.178 SoC Design Lab (2021W) and 384.180 SoC Advanced (2022S)
+## Goal
+
+// TODO define abbreviation HWPE
+
+## Architecture
+
+## Results
+
+## Prerequisites
+
+This project is based on [PULPissmo](https://github.com/pulp-platform/pulpissimo) (as of [September 29, 2021](https://github.com/pulp-platform/pulpissimo/tree/3c9bde1b539679401d4e204716c43bf9422e026d)). Consider the repository's `README` for setup details an prerequisites. Use the PULP SDK instead of the simple runtime.
+
+The following tools are required:
+
+- Questa Sim for simulation (tested with version 10.7c)
+- Cadence Genus for synthesis (version 19.10)
+- Cadence Innovus for implementation (version 20.11)
+- Cadence Voltus for power estimation (version 20.11)
+- Xilinx Vivado for FPGA synthesis & PnR (version 2020.2)
+
+The ASIC synthesis requires access to the TSMC 65nm general purpose PDK. For this project, the [Europractice version](https://europractice-ic.com/technologies/asics/tsmc/) was used.
+
+For the FPGA demo, a Digilent Genesys2 board was used.
+
+## Getting Started
+
+Clone this repository into your `pulpissimo/ips` directory. Then replace the default `hwpe-mac-engine` with this HWPE:
+
+// TODO symbolic link?, test
+
+```
+cd pulpissimo/ips
+git clone https://github.com/sevjaeg/hwpe-aes
+rm -rf hwpe-mac-engine
+mv hwpe-aes hwpe-mac-engine
+```
+
+Now you should be ready to run some code on your enhanced PULPissimo. Use the programs in the `sw` directory to evaluate AES encryptions both in software and in the HWPE. The test vectors are taken from the [NIST Special Publication 800-38A](https://nvlpubs.nist.gov/nistpubs/Legacy/SP/nistspecialpublication800-38a.pdf).
+
+### RTL Simulation
+
+After [building the RTL simulation platform](https://github.com/pulp-platform/pulpissimo/tree/374e383b08bcc030659ecd1c2b3b8ac62dcac4fb#building-the-rtl-simulation-platform), use the PULP SDK to run the demo application. Navigate to `aes_sw` (AES software implementation) or `aes_hwpe` (run AES on HWPE) and call
+
+```
+make clean all run
+```
+
+to start the simulation in Questa Sim. You might want to add `gui=1` and the provided `wave.do` to look into the waveforms.
+
+// TODO why is aes_sw not working?
+
+### FPGA Demo
+
+### ASIC Synthesis
+
+Navigate into the `impl` directory. There, run `make pnr` to run the RTL to GDSII flow.
+
+### Post-Synthesis Simulation
+
+Once you have a post-synthesis netlist for you 
+
+```
+cp ips/hwpe-mac-engine/scripts/hwpe-mac-engine.mk sim/vcompile/ips/hwpe-mac-engine.mk 
+make clean build
+```
+
+Note that this has to be redone after running `make scripts`
+
+### Power Estimation
 
 ## Credits
 
 This project is based on [PULPissmo](https://github.com/pulp-platform/pulpissimo) (as of [September 29, 2021](https://github.com/pulp-platform/pulpissimo/commit/3c9bde1b539679401d4e204716c43bf9422e026d)) including the PULP [Hardware MAC Engine](https://github.com/pulp-platform/hwpe-mac-engine) and the [PULP Runtime Examples](https://github.com/pulp-platform/pulp-rt-examples). The required tools were kindly provided by the [Institute of Computer Technology at TU Wien](https://www.ict.tuwien.ac.at/).
+
+
 
 aes sw and hw
 
@@ -79,6 +149,16 @@ Safer operation with [cipher block chaining (CBC)](https://en.wikipedia.org/wiki
 1120 ns for 4 encryptions
 
 13 cycles (260 ns) for each further 128 bit encryption
+
+7 cycles from start until first data word issued
+4 cycles to read in data
+12 cycles for aes core
+1 cycle to capture output (can be avoided)
+4 cycles to write out
+17 cycles per each further encryption (writing out and reading in can be pipelined)
+4 cycles after completion until event
+
+-> 83 cycles per 128 bit encryption
 
 ### Resource consumption (Nexys 4DDR)
 
@@ -162,7 +242,7 @@ source pulp-sdk/configs/pulpissimo.sh
 source pulp-sdk/configs/fpgas/pulpissimo/genesys2.sh
 cd /ips/hwpe-mac-engine/sw/aes_sw_hwpe/
 make clean all
-$PULP_RISCV_GCC_TOOLCHAIN/bin/riscv32-unknown-elf-gdb build/hwme.c/pulpissimo/hwme/hwme
+$PULP_RISCV_GCC_TOOLCHAIN/bin/riscv32-unknown-elf-gdb build/aes_demo.c/pulpissimo/hwme_aes/hwme_aes 
 ```
 
 Run the code in `gdb`
@@ -178,15 +258,11 @@ Connect the UART connector (J15) to get serial output. Set the Baud rate to 2304
 
 ### Post-Synthesis Simulation
 
-```
-cp ips/hwpe-mac-engine/scripts/hwpe-mac-engine.mk sim/vcompile/ips/hwpe-mac-engine.mk 
-make clean build
-```
 
-Note that this has to be redone after running `make scripts`
 
-## Notes
+### Power consumption
 
-- AES core only yields 487 LUTs, 402 regs but also 5 BRAM tiles
-- Any chance to reduce streamer size?
-
+@typ corner, 625 MHz
+single 128 bit encryption avg 13.9 mW→ 467 pJ/encryption
+pipeline (4x128 bit)  avg 15.6 mW   → 449 pJ/encryption
+pipeline (1024x128 bit)  avg 15.627 mW   → 425.2 pJ/encryption  (only small gain as only writing out and reading into stacker can be interleaved)

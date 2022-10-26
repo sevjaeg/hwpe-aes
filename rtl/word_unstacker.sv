@@ -4,7 +4,7 @@
  * Converts 128 bit data into four 32 bit words (sequentially)
  */
 
-module byte_unstacker
+module word_unstacker
 (
   input  logic           clk_i,
   input  logic           rst_ni,
@@ -91,4 +91,4 @@ module byte_unstacker
   assign valid_o = enable_i & filled_r;
   assign ready_o = ready;
 
-endmodule // byte_unstacker
+endmodule // word_unstacker

@@ -18,9 +18,9 @@ sources:
       # Level 0
       - rtl/aes_rcon.v
       - rtl/aes_sbox.v
-      - rtl/byte_stacker.sv
-      - rtl/byte_unstacker.sv
       - rtl/mac_package.sv
+      - rtl/word_stacker.sv
+      - rtl/word_unstacker.sv
       # Level 1
       - rtl/aes_key_expand_128.v
       - rtl/mac_fsm.sv

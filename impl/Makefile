@@ -1,6 +1,11 @@
 # Supported entities: aes_cipher_top, mac_engine, mac_top_wrap
-# Note: mac_top_wrap does not pass post-synthesis simulation (likely due to an issue with the register file latch)
+
+# Note: mac_top_wrap does not pass post-synthesis simulation
+# (likely due to an issue with the register file latch)
+# as reg_file.hwpe_params is not driven
 DESIGN := mac_engine
+
+# TODO set techlib dir from makefile
 
 RTL_DIR := ../rtl
 LOG_DIR := logs
@@ -30,8 +35,8 @@ SRC_FILES := \
 	$(RTL_DIR)/aes_rcon.v \
 	$(RTL_DIR)/aes_key_expand_128.v \
 	$(RTL_DIR)/aes_cipher_top.v \
-	$(RTL_DIR)/byte_stacker.sv \
-	$(RTL_DIR)/byte_unstacker.sv \
+	$(RTL_DIR)/word_stacker.sv \
+	$(RTL_DIR)/word_unstacker.sv \
 	$(RTL_DIR)/mac_package.sv \
 	$(RTL_DIR)/mac_fsm.sv \
 	$(RTL_DIR)/mac_ctrl.sv \
@@ -46,8 +51,8 @@ SRC_FILES := \
 	$(RTL_DIR)/aes_rcon.v \
 	$(RTL_DIR)/aes_key_expand_128.v \
 	$(RTL_DIR)/aes_cipher_top.v \
-	$(RTL_DIR)/byte_stacker.sv \
-	$(RTL_DIR)/byte_unstacker.sv \
+	$(RTL_DIR)/word_stacker.sv \
+	$(RTL_DIR)/word_unstacker.sv \
 	$(RTL_DIR)/mac_package.sv \
 	$(RTL_DIR)/mac_engine.sv
 else
@@ -94,11 +99,9 @@ sta:
 	export CADENCE_DESIGN=$(DESIGN) && tempus -stylus -log $(LOG_DIR)/$(DESIGN)_tempus -files $(SCRIPT_DIR)/sta.tcl
 
 power:
-ifneq ($(DESIGN), mac_engine)
-$(error Invalid design $(DESIGN). Power estimation only supported for mac_engine)
-endif
 	@echo ""
 	@echo "----------------------------------------------------------------------------------------"
+	@echo "| Power estimation is only meaningful for DESIGN=aes_engine				              |"
 	@echo "| Make sure you ran 'make cli' in tb/mac_engine/post-layout-power to have an           |"
 	@echo "| up-to-date .vcd file and set the respective start and end times in scripts/power.tcl |"
 	@echo "----------------------------------------------------------------------------------------"

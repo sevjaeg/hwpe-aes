@@ -27,8 +27,8 @@ SRC_SVLOG_HW-MAC-ENGINE=\
 	$(IP_PATH)/rtl/aes_rcon.v\
 	$(IP_PATH)/rtl/aes_key_expand_128.v\
 	$(IP_PATH)/rtl/aes_cipher_top.v\
-	$(IP_PATH)/rtl/byte_stacker.sv\
-	$(IP_PATH)/rtl/byte_unstacker.sv\
+	$(IP_PATH)/rtl/word_stacker.sv\
+	$(IP_PATH)/rtl/word_unstacker.sv\
 	$(IP_PATH)/rtl/mac_package.sv\
 	$(IP_PATH)/rtl/mac_fsm.sv\
 	$(IP_PATH)/rtl/mac_ctrl.sv\
@@ -55,8 +55,8 @@ SRC_SVLOG_HW-MAC-ENGINE=\
 	# $(IP_PATH)/rtl/aes_rcon.v\
 	# $(IP_PATH)/rtl/aes_key_expand_128.v\
 	# $(IP_PATH)/rtl/aes_cipher_top.v\
-	# $(IP_PATH)/rtl/byte_stacker.sv\
-	# $(IP_PATH)/rtl/byte_unstacker.sv\
+	# $(IP_PATH)/rtl/word_stacker.sv\
+	# $(IP_PATH)/rtl/word_unstacker.sv\
 	# $(IP_PATH)/rtl/mac_package.sv\
 	# $(IP_PATH)/rtl/mac_fsm.sv\
 	# $(IP_PATH)/rtl/mac_ctrl.sv\

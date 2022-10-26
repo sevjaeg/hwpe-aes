@@ -45,13 +45,14 @@ module mac_engine
   logic                key_valid;
   logic                key_ready;
   logic                aes_valid;
-  logic                aes_reg_valid;
+  logic                r_aes_out_valid;
   logic                aes_ready;
   logic                aes_start;
-  logic                aes_busy;
+  logic                r_aes_busy;
   logic                out_valid;
   logic                out_ready;
 
+  
   aes_cipher_top i_aes(
     .clk (clk_i),
     .rst (rst_ni),
@@ -62,7 +63,7 @@ module mac_engine
     .text_out (aes_out)
   );
 
-  byte_stacker stack_word(
+  word_stacker stack_word(
     .clk_i (clk_i),
     .rst_ni (rst_ni),
     .clr_i  (ctrl_i.clear),
@@ -75,7 +76,7 @@ module mac_engine
     .word_o (word)
   );
 
-  byte_stacker stack_key(
+  word_stacker stack_key(
     .clk_i (clk_i),
     .rst_ni (rst_ni),
     .clr_i  (ctrl_i.clear),
@@ -88,7 +89,7 @@ module mac_engine
     .word_o (key)
   );
 
-  byte_unstacker unstack(
+  word_unstacker unstack(
     .clk_i (clk_i),
     .rst_ni (rst_ni),
     .clr_i  (ctrl_i.clear),
@@ -103,28 +104,28 @@ module mac_engine
 
   assign out_ready = d_o.ready;
 
-  assign aes_start = (~aes_busy) & aes_ready & key_valid & word_chained_valid;
+  assign aes_start = (~r_aes_busy) & aes_ready & key_valid & word_chained_valid;
 
   // Cipher block chaining (CBC)
   assign word_chained = r_aes_out ^ word;
-  assign word_chained_valid = word_valid & aes_reg_valid;
+  assign word_chained_valid = word_valid & r_aes_out_valid;
 
   always_ff @(posedge clk_i or negedge rst_ni)
   begin : proc_r_aes_out
     if(~rst_ni) begin
       r_aes_out <=  128'h000102030405060708090a0b0c0d0e0f;  // CBC initialisation vector
-      aes_reg_valid <= 1'b1;
+      r_aes_out_valid <= 1'b1;
     end
     else begin
       if (aes_valid) begin
         r_aes_out <= aes_out;
-        aes_reg_valid <= 1'b1;
+        r_aes_out_valid <= 1'b1;
       end else if(aes_start) begin
         r_aes_out <= r_aes_out;
-        aes_reg_valid <= 1'b0;
+        r_aes_out_valid <= 1'b0;
       end else begin
         r_aes_out <= r_aes_out;
-        aes_reg_valid <= aes_reg_valid;
+        r_aes_out_valid <= r_aes_out_valid;
       end
     end
   end
@@ -132,24 +133,25 @@ module mac_engine
   always_ff @(posedge clk_i or negedge rst_ni)
   begin : proc_aes_busy
     if(~rst_ni) begin
-      aes_busy <= '0;
+      r_aes_busy <= '0;
     end
     else if (ctrl_i.clear) begin
-      aes_busy <= '0;
+      r_aes_busy <= '0;
     end
     else if (ctrl_i.enable) begin
       // word_valid is re-evaluated after a valid handshake or in transition to 1
       if (aes_start) begin
-        aes_busy <= '1;
+        r_aes_busy <= '1;
       end else if (aes_valid) begin
-        aes_busy <= '0;
+        r_aes_busy <= '0;
       end else begin
-        aes_busy <= aes_busy;
+        r_aes_busy <= r_aes_busy;
       end
     end else begin
-      aes_busy <= aes_busy;
+      r_aes_busy <= r_aes_busy;
     end
   end
+  
 
   always_comb
   begin : set_output
@@ -157,7 +159,18 @@ module mac_engine
     d_o.valid = ctrl_i.enable & out_valid;
     d_o.strb  = '1; // for now, strb is always '1
   end
-
+  
+  /*
+  always_comb
+  begin : set_output
+    d_o.data  = 32'hAAAAAAAA;
+    d_o.valid = a_i.valid;
+    d_o.strb  = '1; // for now, strb is always '1
+    a_i.ready = d_o.ready;
+    b_i.ready = d_o.ready;
+  end
+  */
+  
   // The control counter is implemented directly inside this module; as the control is
   // minimal, it was not deemed convenient to move it to another submodule. For bigger
   // FSMs that is typically the most advantageous choice.
@@ -183,7 +196,8 @@ module mac_engine
   end
 
   assign flags_o.cnt = r_cnt;
-  assign flags_o.acc_valid = out_valid;
+  // TODO (1 should work)
+  assign flags_o.acc_valid = ctrl_i.enable;
 
   // Ready signals have to be propagated backwards through pipeline stages (combinationally).
   // To avoid deadlocks, the following rules have to be followed:

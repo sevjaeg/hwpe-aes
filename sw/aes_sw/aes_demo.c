@@ -23,7 +23,7 @@
 
 #define DEMO 1
 #define SAFE 1  // use CBC instead of ECB
-#define N 32  // Number of (identical) encryptions
+#define N 1  // Number of (identical) encryptions
 
 static int test_encrypt_ecb(unsigned long *start_time, unsigned long *end_time);
 static int test_encrypt_cbc(unsigned long *start_time, unsigned long *end_time);

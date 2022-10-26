@@ -5,8 +5,8 @@
 # All rights reserved.
 # 
 
-TEST_SRCS=hwme.c
-PULP_APP = hwme
+TEST_SRCS = aes_demo.c
+PULP_APP = hwme_aes
 PULP_APP_SRCS = $(TEST_SRCS)
 PULP_INC_PATHS += -DSDK
 PULP_CFLAGS = -O2 -g

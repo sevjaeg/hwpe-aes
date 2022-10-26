@@ -18,19 +18,24 @@
  * Template Author:  Francesco Conti <fconti@iis.ee.ethz.ch>
  */
 
-#include "pulp.h"
 #include <stdint.h>
+#include "pulp.h"
+#include "rt/rt_api.h"
 #include "archi/hwme/hwme_v1.h"
 #include "hal/hwme/hwme_v1.h"
-#include "rt/rt_api.h"
 
-#define DEMO 1
+// ---------- Only change parameters in this section ------
+#define DEMO 1  // print out status, check results
 #define SAFE 1  // use CBC instead of ECB
 
-#define N 1  // Number of (identical) encryptions, max. 32 (only ECB)
+// Number of (identical) encryptions
+// Max 32 otherwise illegal memory access
+// Checks for CBC only work with N=1
+#define N 1
+// --------------------------------------------------------
 
 #if SAFE
-#define WORDS 4
+#define WORDS 4  // larger test vector (otherwise identical to ECB)
 #else
 #define WORDS 1
 #endif
@@ -40,7 +45,7 @@ int main() {
   printf("HWCE base addr: %x\n", HWME_ADDR_BASE);
   #endif
 
-  // test data (storing in words instead of bytes solves ordering issues)
+  // Test data (storing in words instead of bytes solves ordering issues)
   uint32_t key[] = {0x2b7e1516, 0x28aed2a6, 0xabf71588, 0x09cf4f3c};
 
   #if SAFE
@@ -57,7 +62,7 @@ int main() {
   uint32_t in[]  = {0x6bc1bee2, 0x2e409f96, 0xe93d7e11, 0x7393172a};
   #endif
 
-  // pointers passed to HWCE
+  // TCDM pointers passed to HWCE
   uint32_t *a = (uint8_t *) 0x1c010000;
   uint32_t *b = (uint8_t *) 0x1c010200;
   uint32_t *d = (uint8_t *) 0x1c010400;
@@ -65,18 +70,16 @@ int main() {
 
   #if DEMO
   unsigned long start_time, end_time, start_time_2, end_time_2;
-  #endif
   volatile int errors = 0;
-
+  #endif
+  
   int coreID = get_core_id();
   #if DEMO
-  printf("hello from core %d!\n", coreID);
+  printf("Hello from core %d!\n", coreID);
   #endif
  
-  if(get_core_id() == 0) {
-    
-    // initialise data
-    for(int i=0; i<4*WORDS*N; i++) { // output
+  if(coreID == 0) {
+    for(int i=0; i<4*WORDS*N; i++) { // input
       a[i] = in[i%(4*WORDS)];
     }
     for(int i=0; i<4*WORDS*N; i++) { // key
@@ -90,15 +93,16 @@ int main() {
     }
 
     #if DEMO
-    printf("enable HWCE\n");
+    printf("Enable HWCE\n");
     start_time_2 = rt_time_get_us();
     #endif
+
     plp_hwme_enable();
     
     // aquire hwpe lock
     while(hwme_acquire_job() < 0);
 
-    // set up bytecode (TODO hardwired ok?)
+    // set up bytecode (unaltered from template)
     hwme_bytecode_set(HWME_LOOPS1_OFFS,           0x00000000);
     hwme_bytecode_set(HWME_BYTECODE5_LOOPS0_OFFS, 0x00040000);
     hwme_bytecode_set(HWME_BYTECODE4_OFFS,        0x00000000);
@@ -107,27 +111,38 @@ int main() {
     hwme_bytecode_set(HWME_BYTECODE1_OFFS,        0x000008cd);
     hwme_bytecode_set(HWME_BYTECODE0_OFFS,        0x11a13c05);
     
+    
     // job-dependent registers
     hwme_a_addr_set((unsigned int) a);
     hwme_b_addr_set((unsigned int) b);
     hwme_d_addr_set((unsigned int) d);
 
+    // not required
     hwme_nb_iter_set(4*N*WORDS);
+
     hwme_len_iter_set(4*N*WORDS-1);  // input word count
+
+    // TODO required? likely no
     hwme_vectstride_set(4);
     hwme_vectstride2_set(4);
 
+    // superfluous now
     hwme_shift_simplemul_set(hwme_shift_simplemul_value(0, 1));  // select simplemul mode: write results to continous memory
 
     // start HWME operation
     #if DEMO
+    printf("Starting HWCE computation\n");
     start_time = rt_time_get_us();
     #endif
+
     hwme_trigger_job();
 
     // wait for end of compuation
     soc_eu_fcEventMask_setEvent(ARCHI_SOC_EVENT_FCHWPE0);
     __rt_periph_wait_event(ARCHI_SOC_EVENT_FCHWPE0, 1);
+    
+    // TODO remove
+    //rt_time_wait_cycles(1000);
 
     #if DEMO
     end_time = rt_time_get_us();
@@ -135,11 +150,10 @@ int main() {
     plp_hwme_disable();
     #if DEMO
     end_time_2 = rt_time_get_us();
-    printf("finished HWCE operation\n");
+    printf("Finished HWCE computation\n");
 
-    // check
+    // check results
     for(int j=0; j<N*WORDS*4; ++j) {
-      
       if(d[j] != r[j]){
         printf("Expecting %x got %x\n", r[j], d[j]);
         errors++;
@@ -148,10 +162,16 @@ int main() {
     #endif
   }
   #if DEMO
-  printf("Encrypted 4x%d words with %d errors\n", N*WORDS, errors);
-  printf("Runtime computation %lu us\n", end_time-start_time);
-  printf("Full runtime %lu us\n", end_time_2-start_time_2);
+  printf("Encrypted 4x%d 32-bit words with %d errors\n", N*WORDS, errors);
+  printf("Computation runtime %lu us\n", end_time-start_time);
+  printf("Full runtime        %lu us\n", end_time_2-start_time_2);
   #endif
+
   synch_barrier();
+
+  #if DEMO
   return errors;
+  #else
+  return 0;
+  #endif
 }
