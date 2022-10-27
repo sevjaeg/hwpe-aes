@@ -41,6 +41,10 @@ Now you should be ready to run some code on your enhanced PULPissimo. Use the pr
 
 ### RTL Simulation
 
+// TODO
+rtl/pulpissimo/pulpissimo.sv
+ parameter USE_HWPE    = 1
+
 After [building the RTL simulation platform](https://github.com/pulp-platform/pulpissimo/tree/374e383b08bcc030659ecd1c2b3b8ac62dcac4fb#building-the-rtl-simulation-platform), use the PULP SDK to run the demo application. Navigate to `aes_sw` (AES software implementation) or `aes_hwpe` (run AES on HWPE) and call
 
 ```
@@ -53,20 +57,29 @@ to start the simulation in Questa Sim. You might want to add `gui=1` and the pro
 
 ### FPGA Demo
 
+> Due to an [issue](https://github.com/pulp-platform/pulpissimo/issues/274) with the HWPE FPGA emulation in PULPissimo, the output data are not written.
+
 ### ASIC Synthesis
 
 Navigate into the `impl` directory. There, run `make pnr` to run the RTL to GDSII flow.
 
 ### Post-Synthesis Simulation
 
+Engine only vs full hwpe (requires `REGS_HARDWIRED=1` in `mac_engine.sv`)
+
+Copy library simulation lib to impl/hdl
+
+ips/pulp_soc/rtl/fc/fc_hwpe.sv Line 78
+comment out .ID  ( ID_WIDTH )  // post synthesis
+
 Once you have a post-synthesis netlist for you 
 
+Comment in the proper section of `src_files.yml`. Then, run the following in the `pulpissimo` directory:
+
 ```
-cp ips/hwpe-mac-engine/scripts/hwpe-mac-engine.mk sim/vcompile/ips/hwpe-mac-engine.mk 
+make scripts
 make clean build
 ```
-
-Note that this has to be redone after running `make scripts`
 
 ### Power Estimation
 
@@ -225,6 +238,12 @@ Byte Stacker (each) | 25 | 131 | 0
 Byte Unstacker | 104 | 164 | 0
 
 ## FPGA Demo (Genesys 2)
+
+`fpga/pulpsissimo-genesys2/rtl/xilinx_pulpissimo.v`
+
+```
+localparam USE_HWPE  = 1;
+```
 
 Synthesise with `make genesys2` in `pulpissimo_local` (not on server!), flash `.bit` with Vivado GUI
 

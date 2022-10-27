@@ -1,11 +1,9 @@
 # Supported entities: aes_cipher_top, mac_engine, mac_top_wrap
+# mac_top_wrap does not pass post-synthesis simulation
+# (likely due to an issue with the register file latch as reg_file.hwpe_params is not driven)
+DESIGN := mac_top_wrap
 
-# Note: mac_top_wrap does not pass post-synthesis simulation
-# (likely due to an issue with the register file latch)
-# as reg_file.hwpe_params is not driven
-DESIGN := mac_engine
-
-# TODO set techlib dir from makefile
+TECHLIB_DIR := /kits/tsmc/65nm/GP_stclib/10-track/tcbn65gplushpbwp-set/tcbn65gplushpbwp_140a_FE/TSMCHOME
 
 RTL_DIR := ../rtl
 LOG_DIR := logs
@@ -64,13 +62,13 @@ endif
 all: pnr
 
 .synth-$(DESIGN).timestamp: $(SRC_FILES) $(COMMON_SCRIPTS) $(SYN_SCRIPT) $(HDL_SCRIPT)
-	export CADENCE_DESIGN=$(DESIGN) && export PNR=0 && genus -batch -log ./$(LOG_DIR)/$(DESIGN)_genus -files $(SYN_SCRIPT)
+	export CADENCE_DESIGN=$(DESIGN) && export TECHLIB_DIR=$(TECHLIB_DIR) && export PNR=0 && genus -batch -log ./$(LOG_DIR)/$(DESIGN)_genus -files $(SYN_SCRIPT)
 	@ # genus generates unsigned int params, however Questa demands int unsigned
 	if [ -a $(OUT_DIR)/${DESIGN}_synth_wrap.sv ]; then sed -i 's/unsigned int/int unsigned/g' $(OUT_DIR)/${DESIGN}_synth_wrap.sv; fi;
 	touch .synth-$(DESIGN).timestamp
 
 .pnr-$(DESIGN).timestamp: $(COMMON_SCRIPTS) $(PNR_SCRIPT) .synth-$(DESIGN).timestamp
-	export CADENCE_DESIGN=$(DESIGN) && export PNR=1 && innovus -stylus -no_gui -batch -log ./$(LOG_DIR)/$(DESIGN)_innovus \
+	export CADENCE_DESIGN=$(DESIGN) && export TECHLIB_DIR=$(TECHLIB_DIR) && export PNR=1 && innovus -stylus -no_gui -batch -log ./$(LOG_DIR)/$(DESIGN)_innovus \
 																						 -files $(PNR_SCRIPT)
 	rm -f $(REPORT_DIR)/$(DESIGN)/*.rpt.old
 	rm -f $(DESIGN)_metallfill.rpt

@@ -1,5 +1,6 @@
 source scripts/common.tcl
 set DESIGN $::env(CADENCE_DESIGN)
+set TECHLIB_DIR $::env(TECHLIB_DIR)
 
 if {$DESIGN != "aes_cipher_top"} {
   set DESIGN_TOP ${DESIGN}_genus
@@ -12,7 +13,7 @@ set_multi_cpu_usage -local_cpu 8
 set DATE [clock format [clock seconds] -format "%b%d-%T"]
 
 set_db init_netlist_files ${_OUTPUTS_PATH}/${DESIGN}_synth.v
-set_db init_lef_files /kits/tsmc/65nm/GP_stclib/10-track/tcbn65gplushpbwp-set/tcbn65gplushpbwp_140a_FE/TSMCHOME/digital/Back_End/lef/tcbn65gplushpbwp_140a/lef/tcbn65gplushpbwp_6lmT1.lef
+set_db init_lef_files ${TECHLIB_DIR}/digital/Back_End/lef/tcbn65gplushpbwp_140a/lef/tcbn65gplushpbwp_6lmT1.lef
 # includes captables and sdc
 set_db init_mmmc_files scripts/mmmc.tcl
 
@@ -23,7 +24,7 @@ set_db design_process_node 65
 
 read_mmmc scripts/mmmc.tcl
 
-read_physical -lef /kits/tsmc/65nm/GP_stclib/10-track/tcbn65gplushpbwp-set/tcbn65gplushpbwp_140a_FE/TSMCHOME/digital/Back_End/lef/tcbn65gplushpbwp_140a/lef/tcbn65gplushpbwp_6lmT1.lef
+read_physical -lef ${TECHLIB_DIR}/digital/Back_End/lef/tcbn65gplushpbwp_140a/lef/tcbn65gplushpbwp_6lmT1.lef
 read_netlist ${_OUTPUTS_PATH}/${DESIGN}_synth.v -top ${DESIGN_TOP}
 
 init_design
@@ -94,14 +95,15 @@ if {$DESIGN == "mac_engine"} {
     set violations [add_to_collection $violations [get_nets b_i_valid]]
     set violations [add_to_collection $violations [get_nets {ctrl_i[start]}]]
     set violations [add_to_collection $violations [get_nets {ctrl_i[clear]}]]
+    set violations [add_to_collection $violations [get_nets {ctrl_i[enable]}]]
+    # still violations with one buffer
+    set violations [add_to_collection $violations [get_nets {ctrl_i[enable]}]]
 
     # Might cause IMPSP-2020 which leads to ERROR IMPSP-2021. However, this only leads to not placed filler cells
     # this should not be a problem
     foreach_in_collection net ${violations}  {
       eco_add_repeater -cells BUFFD2HPBWP -net [get_object_name ${net}]
     }
-    # larger fanout
-    eco_add_repeater -cells BUFFD8HPBWP -net {ctrl_i[enable]}
 }
 
 # fillers before eco cause spurious violations

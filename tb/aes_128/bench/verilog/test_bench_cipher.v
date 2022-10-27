@@ -36,27 +36,6 @@
 ////                                                             ////
 /////////////////////////////////////////////////////////////////////
 
-//  CVS Log
-//
-//  $Id: test_bench_top.v,v 1.2 2002-11-12 16:10:12 rudi Exp $
-//
-//  $Date: 2002-11-12 16:10:12 $
-//  $Revision: 1.2 $
-//  $Author: rudi $
-//  $Locker:  $
-//  $State: Exp $
-//
-// Change History:
-//               $Log: not supported by cvs2svn $
-//               Revision 1.1.1.1  2002/11/09 11:22:56  rudi
-//               Initial Checkin
-//
-//
-//
-//
-//
-//
-
 `timescale 1ns / 1ps
 
 module test;

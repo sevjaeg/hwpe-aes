@@ -14,6 +14,10 @@
  * limitations under the License.
  */
 
+ /*
+  * This file is paritally modified from https://github.com/kokke/tiny-AES-c
+  */
+
 #include <stdio.h>
 #include <stdint.h>
 #include <stddef.h>

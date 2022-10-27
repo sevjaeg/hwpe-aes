@@ -50,10 +50,12 @@ hwpe_stream_intf_stream #(
 assign a.valid = valid_word_in;
 assign ready_word_in = a.ready;
 assign a.data  = word_in;
+assign a.strb  = '1;
 
 assign b.valid = valid_key_in;
 assign ready_key_in = b.ready;
 assign b.data  = key_in;
+assign b.strb  = '1;
 
 assign valid_out = d.valid;
 assign d.ready = ready_out;
@@ -121,13 +123,14 @@ initial begin
     word_in = '0;
 
     repeat (2) @(posedge clk);
-    # 0.8
+    @(negedge clk);
     rst_n = '1;
     repeat (2) @(posedge clk);
 
     for (i=0; i<16; i=i+1) begin
         word_in = test_vector_word[i];
         key_in = test_vector_key[i%4];
+        #0;
         valid_word_in = 1;
         @(posedge clk);
         valid_key_in = 1;
@@ -139,6 +142,7 @@ initial begin
             if(ready_key_in) begin
                 valid_key_in = 0;
             end
+            #0;
         end while(!ready_word_in | !ready_key_in);
     end
 

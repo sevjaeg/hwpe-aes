@@ -20,7 +20,8 @@ module mac_top
 #(
   parameter int unsigned N_CORES = 2,
   parameter int unsigned MP  = 4,
-  parameter int unsigned ID  = 10
+  parameter int unsigned ID  = 10,
+  parameter int unsigned REGS_HARDWIRED = 0
 )
 (
   // global signals
@@ -93,7 +94,9 @@ module mac_top
     .N_CORES   ( 2  ),
     .N_CONTEXT ( 2  ),
     .N_IO_REGS ( 16 ),
-    .ID ( ID )
+    .ID ( ID ),
+    .ULOOP_HARDWIRED ( 1 ),
+    .REGS_HARDWIRED  ( REGS_HARDWIRED )  // required for FPGA demo and full HWPE ASIC synthesis
   ) i_ctrl (
     .clk_i            ( clk_i          ),
     .rst_ni           ( rst_ni         ),

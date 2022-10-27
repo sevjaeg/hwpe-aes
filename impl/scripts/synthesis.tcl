@@ -6,12 +6,13 @@ puts "Host : [info hostname]"
 
 include scripts/common.tcl
 set DESIGN $::env(CADENCE_DESIGN)
+set TECHLIB_DIR $::env(TECHLIB_DIR)
 
 set GEN_EFF medium
 set MAP_OPT_EFF high
 set DATE [clock format [clock seconds] -format "%b%d-%T"] 
 
-set_db init_lib_search_path /kits/tsmc/65nm/GP_stclib/10-track/tcbn65gplushpbwp-set/tcbn65gplushpbwp_140a_FE/TSMCHOME/digital/Front_End/timing_power_noise/CCS/tcbn65gplushpbwp_140a/
+set_db init_lib_search_path ${TECHLIB_DIR}
 set_db script_search_path {. scripts}
 
 set_db hdl_unconnected_value none
@@ -44,7 +45,7 @@ set_db design_process_node 65
 
 read_mmmc mmmc.tcl
 
-set_db lef_library /kits/tsmc/65nm/GP_stclib/10-track/tcbn65gplushpbwp-set/tcbn65gplushpbwp_140a_FE/TSMCHOME/digital/Back_End/lef/tcbn65gplushpbwp_140a/lef/tcbn65gplushpbwp_6lmT1.lef
+set_db lef_library digital/Back_End/lef/tcbn65gplushpbwp_140a/lef/tcbn65gplushpbwp_6lmT1.lef
 
 ####################################################################
 ## Load Design
@@ -156,7 +157,7 @@ if {$DESIGN != "aes_cipher_top"} {
 write_netlist  > ${_OUTPUTS_PATH}/${DESIGN}_synth.v
 
 write_do_lec -logfile ../$_REPORTS_PATH/${DESIGN}/lec_synth.log \
-             -sim_lib /kits/tsmc/65nm/GP_stclib/10-track/tcbn65gplushpbwp-set/tcbn65gplushpbwp_140a_FE/TSMCHOME/digital/Front_End/verilog/tcbn65gplushpbwp_140a/tcbn65gplushpbwp.v \
+             -sim_lib ${TECHLIB_DIR}/digital/Front_End/verilog/tcbn65gplushpbwp_140a/tcbn65gplushpbwp.v \
              -golden_design rtl \
              -revised_design ${_OUTPUTS_PATH}/${DESIGN}_synth.v \
              -top ${DESIGN_LEC} -tmp_dir tmp/ \

@@ -15,5 +15,5 @@ read_hdl -sv -define SYNTHESIS=1 hwpe_stream_package.sv hwpe_stream_assign.sv hw
              hwpe_stream_tcdm_assign.sv hwpe_stream_tcdm_fifo.sv hwpe_stream_tcdm_fifo_load.sv \
              hwpe_stream_tcdm_fifo_load_sidech.sv hwpe_stream_tcdm_fifo_store.sv hwpe_stream_tcdm_mux.sv \
              hwpe_stream_tcdm_mux_static.sv hwpe_stream_tcdm_reorder.sv hwpe_stream_tcdm_reorder_static.sv
-read_hdl -sv byte_stacker.sv byte_unstacker.sv mac_package.sv mac_ctrl.sv mac_fsm.sv mac_streamer.sv mac_engine.sv mac_top.sv
+read_hdl -sv word_stacker.sv word_unstacker.sv mac_package.sv mac_ctrl.sv mac_fsm.sv mac_streamer.sv mac_engine.sv mac_top.sv
 read_hdl -sv mac_top_wrap.sv

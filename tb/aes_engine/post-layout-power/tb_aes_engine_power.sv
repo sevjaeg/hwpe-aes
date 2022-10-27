@@ -29,7 +29,6 @@ logic [31:0]  word_out;
 logic [31:0]  test_vector_key [ 3:0];
 logic [31:0]  test_vector_word[15:0];
 logic [31:0]  test_vector_out [15:0];
-integer       i;
 integer       j;
 integer       k;
 integer       errors;
@@ -54,10 +53,12 @@ hwpe_stream_intf_stream #(
 assign a.valid = valid_word_in;
 assign ready_word_in = a.ready;
 assign a.data  = word_in;
+assign a.strb  = '1;
 
 assign b.valid = valid_key_in;
 assign ready_key_in = b.ready;
 assign b.data  = key_in;
+assign b.strb  = '1;
 
 assign valid_out = d.valid;
 assign d.ready = ready_out;
@@ -133,9 +134,10 @@ initial begin
 
     $display("\nSingle word test start @%t", $realtime);
 
-    for (i=0; i<4; i=i+1) begin
+    for (integer i=0; i<4; i=i+1) begin
         word_in = test_vector_word[i];
         key_in = test_vector_key[i%4];
+        #0;
         valid_word_in = 1;
         valid_key_in = 1;
         do begin
@@ -143,9 +145,10 @@ initial begin
             if(valid_word_in & ready_word_in) begin
                 valid_word_in = 0;
             end
-            if(ready_key_in) begin
+            if(valid_key_in &ready_key_in) begin
                 valid_key_in = 0;
             end
+            #0;
         end while(!ready_word_in | !ready_key_in);
     end
     
@@ -156,21 +159,23 @@ initial begin
     @(negedge clk);
     rst_n = '1;
     repeat (1) @(posedge clk);
-    $display("\n Short Pipeline test @%t", $realtime);
+    $display("\nPipeline test @%t", $realtime);
 
-    for (i=0; i<4*PIPELINE_TEST_LEN; i=i+1) begin
+    for (integer i=0; i<4*PIPELINE_TEST_LEN; i=i+1) begin
         word_in = test_vector_word[i%16];
         key_in = test_vector_key[i%4];
+        #0;
         valid_word_in = 1;
         valid_key_in = 1;
         do begin
             @(posedge clk);
-            if(ready_word_in) begin
+            if(valid_word_in & ready_word_in) begin
                 valid_word_in = 0;
             end
-            if(ready_key_in) begin
+            if(valid_key_in & ready_key_in) begin
                 valid_key_in = 0;
             end
+            #0;
         end while(!ready_word_in | !ready_key_in);
     end
 end
@@ -187,19 +192,19 @@ initial begin
     $display("\nStarting AES engine testbench\n");
     while(clk_active) begin
         if (!test_1_done & j == 4) begin
-            $display("\nTest stop @%t, %0d errors (%0d checks)", $realtime, errors, j);
+            $display("Test stop @%t, %0d errors (%0d checks)", $realtime, errors, j);
             $display("Update these times in impl/scripts/power.tcl\n");
             test_1_done = 1;
             j = 0;
         end else
         if (test_1_done & j == 4*PIPELINE_TEST_LEN) begin
-          $display("\nTest stop @%t, %0d errors (%0d checks)", $realtime, errors, j);
+          $display("Test stop @%t, %0d errors (%0d words, 16 checks)", $realtime, errors, j);
           $display("Update these times in impl/scripts/power.tcl\n");
           clk_active = 0;
         end
         @(posedge clk);
         if (valid_out & ready_out) begin
-            if(word_out != test_vector_out[j]) begin
+            if(j <= 16 & (word_out != test_vector_out[j])) begin
                 $display("ERROR @%t ns: output=%h expect=%h", $realtime, word_out, test_vector_out[j]);
                 errors = errors + 1;
             end

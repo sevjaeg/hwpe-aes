@@ -24,15 +24,17 @@
 #include "archi/hwme/hwme_v1.h"
 #include "hal/hwme/hwme_v1.h"
 
-// ---------- Only change parameters in this section ------
+// ---------- Only change parameters in this section ----------
 #define DEMO 1  // print out status, check results
-#define SAFE 1  // use CBC instead of ECB
+#define SAFE 1  // use CBC instead of ECB (0 not supported by
+                // default hw configuration)
+#define DEBUG 0
 
 // Number of (identical) encryptions
 // Max 32 otherwise illegal memory access
 // Checks for CBC only work with N=1
 #define N 1
-// --------------------------------------------------------
+// ------------------------------------------------------------
 
 #if SAFE
 #define WORDS 4  // larger test vector (otherwise identical to ECB)
@@ -102,32 +104,21 @@ int main() {
     // aquire hwpe lock
     while(hwme_acquire_job() < 0);
 
-    // set up bytecode (unaltered from template)
-    hwme_bytecode_set(HWME_LOOPS1_OFFS,           0x00000000);
-    hwme_bytecode_set(HWME_BYTECODE5_LOOPS0_OFFS, 0x00040000);
-    hwme_bytecode_set(HWME_BYTECODE4_OFFS,        0x00000000);
-    hwme_bytecode_set(HWME_BYTECODE3_OFFS,        0x00000000);
-    hwme_bytecode_set(HWME_BYTECODE2_OFFS,        0x00000000);
-    hwme_bytecode_set(HWME_BYTECODE1_OFFS,        0x000008cd);
-    hwme_bytecode_set(HWME_BYTECODE0_OFFS,        0x11a13c05);
-    
-    
-    // job-dependent registers
+    // TCDM addresses
     hwme_a_addr_set((unsigned int) a);
     hwme_b_addr_set((unsigned int) b);
     hwme_d_addr_set((unsigned int) d);
 
-    // not required
-    hwme_nb_iter_set(4*N*WORDS);
+    // input word count
+    hwme_len_iter_set(4*N*WORDS-1);
 
-    hwme_len_iter_set(4*N*WORDS-1);  // input word count
-
-    // TODO required? likely no
-    hwme_vectstride_set(4);
-    hwme_vectstride2_set(4);
-
-    // superfluous now
-    hwme_shift_simplemul_set(hwme_shift_simplemul_value(0, 1));  // select simplemul mode: write results to continous memory
+    #if DEBUG
+    // Print config registers. Errornous in FPGA emulation without hardwired signals.
+    printf("Addr a %x\n", HWME_READ(HWME_A_ADDR));
+    printf("Addr b %x\n", HWME_READ(HWME_B_ADDR));
+    printf("Addr d %x\n", HWME_READ(HWME_D_ADDR));
+    printf("Len    %x\n", HWME_READ(HWME_LEN_ITER));
+    #endif
 
     // start HWME operation
     #if DEMO
@@ -135,10 +126,11 @@ int main() {
     start_time = rt_time_get_us();
     #endif
 
+    soc_eu_fcEventMask_setEvent(ARCHI_SOC_EVENT_FCHWPE0);
+
     hwme_trigger_job();
 
     // wait for end of compuation
-    soc_eu_fcEventMask_setEvent(ARCHI_SOC_EVENT_FCHWPE0);
     __rt_periph_wait_event(ARCHI_SOC_EVENT_FCHWPE0, 1);
     
     // TODO remove
@@ -167,6 +159,7 @@ int main() {
   printf("Full runtime        %lu us\n", end_time_2-start_time_2);
   #endif
 
+  hwme_soft_clear();
   synch_barrier();
 
   #if DEMO
