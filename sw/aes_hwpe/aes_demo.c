@@ -30,45 +30,42 @@
                 // default hw configuration)
 #define DEBUG 0
 
-// Number of (identical) encryptions
-// Max 32 otherwise illegal memory access
+// Number of (identical) encryptions - make sure to align 
+// Max 32 otherwise illegal memory access for ECB
 // Checks for CBC only work with N=1
 #define N 1
 // ------------------------------------------------------------
 
 #if SAFE
-#define WORDS 4  // larger test vector (otherwise identical to ECB)
+#define WORDS 4  // larger test vector (otherwise results identical to ECB)
 #else
 #define WORDS 1
 #endif
 
 int main() {
-  #if DEMO
-  printf("HWCE base addr: %x\n", HWME_ADDR_BASE);
-  #endif
 
   // Test data (storing in words instead of bytes solves ordering issues)
   uint32_t key[] = {0x2b7e1516, 0x28aed2a6, 0xabf71588, 0x09cf4f3c};
-
   #if SAFE
-  uint32_t out[] = {0x7649abac, 0x8119b246, 0xcee98e9b, 0x12e9197d,
-                    0x5086cb9b, 0x507219ee, 0x95db113a, 0x917678b2,
-                    0x73bed6b8, 0xe3c1743b, 0x7116e69e, 0x22229516,
-                    0x3ff1caa1, 0x681fac09, 0x120eca30, 0x7586e1a7};
+  // input words                  
   uint32_t in[]  = {0x6bc1bee2, 0x2e409f96, 0xe93d7e11, 0x7393172a,
                     0xae2d8a57, 0x1e03ac9c, 0x9eb76fac, 0x45af8e51,
                     0x30c81c46, 0xa35ce411, 0xe5fbc119, 0x1a0a52ef,
                     0xf69f2445, 0xdf4f9b17, 0xad2b417b, 0xe66c3710};
+  // reference output
+  uint32_t out[] = {0x7649abac, 0x8119b246, 0xcee98e9b, 0x12e9197d,
+                    0x5086cb9b, 0x507219ee, 0x95db113a, 0x917678b2,
+                    0x73bed6b8, 0xe3c1743b, 0x7116e69e, 0x22229516,
+                    0x3ff1caa1, 0x681fac09, 0x120eca30, 0x7586e1a7};
   #else
-  uint32_t out[] = {0x3ad77bb4, 0x0d7a3660, 0xa89ecaf3, 0x2466ef97};
   uint32_t in[]  = {0x6bc1bee2, 0x2e409f96, 0xe93d7e11, 0x7393172a};
+  uint32_t out[] = {0x3ad77bb4, 0x0d7a3660, 0xa89ecaf3, 0x2466ef97};
   #endif
 
   // TCDM pointers passed to HWCE
   uint32_t *a = (uint8_t *) 0x1c010000;
   uint32_t *b = (uint8_t *) 0x1c010200;
   uint32_t *d = (uint8_t *) 0x1c010400;
-  uint32_t *r = (uint8_t *) 0x1c010600;
 
   #if DEMO
   unsigned long start_time, end_time, start_time_2, end_time_2;
@@ -78,6 +75,7 @@ int main() {
   int coreID = get_core_id();
   #if DEMO
   printf("Hello from core %d!\n", coreID);
+  printf("HWCE base addr: %x\n", HWME_ADDR_BASE);
   #endif
  
   if(coreID == 0) {
@@ -86,9 +84,6 @@ int main() {
     }
     for(int i=0; i<4*WORDS*N; i++) { // key
       b[i] = key[i%4];
-    }
-    for(int i=0; i<4*WORDS*N; i++) { // reference output
-      r[i] = out[i%(4*WORDS)];
     }
     for(int i=0; i<4*WORDS*N; i++) { // output
       d[i] = 0;
@@ -100,16 +95,15 @@ int main() {
     #endif
 
     plp_hwme_enable();
-    
-    // aquire hwpe lock
+
     while(hwme_acquire_job() < 0);
 
-    // TCDM addresses
-    hwme_a_addr_set((unsigned int) a);
-    hwme_b_addr_set((unsigned int) b);
-    hwme_d_addr_set((unsigned int) d);
+    // TCDM addresses (currently hardwired)
+    // hwme_a_addr_set((unsigned int) a);
+    // hwme_b_addr_set((unsigned int) b);
+    // hwme_d_addr_set((unsigned int) d);
 
-    // input word count
+    // input word count (has to be 4*X-1)
     hwme_len_iter_set(4*N*WORDS-1);
 
     #if DEBUG
@@ -122,20 +116,20 @@ int main() {
 
     // start HWME operation
     #if DEMO
-    printf("Starting HWCE computation\n");
     start_time = rt_time_get_us();
     #endif
 
     soc_eu_fcEventMask_setEvent(ARCHI_SOC_EVENT_FCHWPE0);
+
+    #if DEBUG
+    printf("Starting HWCE computation");
+    #endif
 
     hwme_trigger_job();
 
     // wait for end of compuation
     __rt_periph_wait_event(ARCHI_SOC_EVENT_FCHWPE0, 1);
     
-    // TODO remove
-    //rt_time_wait_cycles(1000);
-
     #if DEMO
     end_time = rt_time_get_us();
     #endif
@@ -146,8 +140,8 @@ int main() {
 
     // check results
     for(int j=0; j<N*WORDS*4; ++j) {
-      if(d[j] != r[j]){
-        printf("Expecting %x got %x\n", r[j], d[j]);
+      if(d[j] != out[j%(WORDS*4)]){
+        printf("Expecting %x got %x\n", out[j%(WORDS*4)], d[j]);
         errors++;
       }
     }
@@ -159,7 +153,6 @@ int main() {
   printf("Full runtime        %lu us\n", end_time_2-start_time_2);
   #endif
 
-  hwme_soft_clear();
   synch_barrier();
 
   #if DEMO

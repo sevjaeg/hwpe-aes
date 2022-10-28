@@ -99,7 +99,7 @@ sta:
 power:
 	@echo ""
 	@echo "----------------------------------------------------------------------------------------"
-	@echo "| Power estimation is only meaningful for DESIGN=aes_engine				              |"
+	@echo "| Power estimation is only meaningful for DESIGN=aes_engine                            |"
 	@echo "| Make sure you ran 'make cli' in tb/mac_engine/post-layout-power to have an           |"
 	@echo "| up-to-date .vcd file and set the respective start and end times in scripts/power.tcl |"
 	@echo "----------------------------------------------------------------------------------------"
