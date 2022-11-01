@@ -1,6 +1,7 @@
-# Supported entities: aes_cipher_top, mac_engine, mac_top_wrap
-# mac_top_wrap does not pass post-synthesis simulation
-# (likely due to an issue with the register file latch as reg_file.hwpe_params is not driven)
+# Supported entities: 
+# mac_top_wrap (full HWPE)
+# mac_engine (HWPE datapath)
+# aes_cipher_top (aes engine)
 DESIGN := mac_top_wrap
 
 TECHLIB_DIR := /kits/tsmc/65nm/GP_stclib/10-track/tcbn65gplushpbwp-set/tcbn65gplushpbwp_140a_FE/TSMCHOME
@@ -83,7 +84,7 @@ synth-gui: synth
 
 pnr: logdir .pnr-$(DESIGN).timestamp
 
-pnr-gui: pnr
+pnr-gui:
 	export CADENCE_DESIGN=$(DESIGN) && innovus -stylus -log ./$(LOG_DIR)/$(DESIGN)_innovus_gui -files $(SCRIPT_DIR)/innovus_gui.tcl
 
 check-synth: synth
@@ -92,10 +93,11 @@ check-synth: synth
 check-pnr: pnr
 	lec -XL -NOGui -Color -Dofile $(OUT_DIR)/$(DESIGN)_lec_layout.do
 
-# just for testing reasons
+# just for testing purposes
 sta:
 	export CADENCE_DESIGN=$(DESIGN) && tempus -stylus -log $(LOG_DIR)/$(DESIGN)_tempus -files $(SCRIPT_DIR)/sta.tcl
 
+# TODO update
 power:
 	@echo ""
 	@echo "----------------------------------------------------------------------------------------"

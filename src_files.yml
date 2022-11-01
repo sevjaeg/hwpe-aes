@@ -4,19 +4,19 @@ hw-mac-engine:
   ]
   files : [
     ### Behavioural
-    # rtl/aes_sbox.v,
-    # rtl/aes_rcon.v,
-    # rtl/aes_key_expand_128.v,
-    # rtl/aes_cipher_top.v,
-    # rtl/word_stacker.sv,
-    # rtl/word_unstacker.sv,
-    # rtl/mac_package.sv,
-    # rtl/mac_fsm.sv,
-    # rtl/mac_ctrl.sv,
-    # rtl/mac_streamer.sv,
-    # rtl/mac_engine.sv,
-    # rtl/mac_top.sv,
-    # wrap/mac_top_wrap.sv
+    rtl/aes_sbox.v,
+    rtl/aes_rcon.v,
+    rtl/aes_key_expand_128.v,
+    rtl/aes_cipher_top.v,
+    rtl/word_stacker.sv,
+    rtl/word_unstacker.sv,
+    rtl/mac_package.sv,
+    rtl/mac_fsm.sv,
+    rtl/mac_ctrl.sv,
+    rtl/mac_streamer.sv,
+    rtl/mac_engine.sv,
+    rtl/mac_top.sv,
+    wrap/mac_top_wrap.sv
     ### Post-synthesis engine
     # rtl/mac_package.sv,
     # rtl/mac_fsm.sv,
@@ -27,10 +27,14 @@ hw-mac-engine:
     # impl/out/mac_engine_synth_wrap.sv,
     # rtl/mac_top.sv,
     # wrap/mac_top_wrap.sv
-    ### Post-synthesis HWPE (requires REGS_HARDWIRED=1 in mac_engine.sv)
-    impl/hdl/tcbn65gplushpbwp.v,
-    impl/out/mac_top_wrap_synth.v,
-    impl/out/mac_top_wrap_synth_wrap.sv
+    ### Post-synthesis HWPE
+    # impl/hdl/tcbn65gplushpbwp.v,
+    # impl/out/mac_top_wrap_synth.v,
+    # impl/out/mac_top_wrap_synth_wrap.sv
+    ### Post-layout HWPE (for power estimation)
+    # impl/hdl/tcbn65gplushpbwp.v,
+    # impl/out/mac_top_wrap_layout.v,
+    # impl/out/mac_top_wrap_synth_wrap.sv
   ]
   vlog_opts : [
     "-L hwpe_ctrl_lib",

@@ -22,5 +22,6 @@ mp_data
 .timing_file*
 scheduling_file.*
 *.pinfo
+.st_launch_*
 
 tcbn65gplushpbwp.v

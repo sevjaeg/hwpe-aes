@@ -53,8 +53,6 @@ make clean all run
 
 to start the simulation in Questa Sim. You might want to add `gui=1` and the provided `wave.do` to look into the waveforms.
 
-// TODO why is aes_sw not working?
-
 ### FPGA Demo
 
 > Due to an [issue](https://github.com/pulp-platform/pulpissimo/issues/274) with the HWPE FPGA emulation in PULPissimo, the output data are not written.
@@ -65,7 +63,7 @@ Navigate into the `impl` directory. There, run `make pnr` to run the RTL to GDSI
 
 ### Post-Synthesis Simulation
 
-Engine only vs full hwpe (requires `REGS_HARDWIRED=1` in `mac_engine.sv`)
+Engine only vs full hwpe
 
 Copy library simulation lib to impl/hdl
 
@@ -81,6 +79,22 @@ make scripts
 make clean build
 ```
 
+vsim -c -quiet -L models_lib -L vip_lib -t ps +nowarnTRAN +nowarnTSCALE +nowarnTFMPC +TB_PATH=/home/sjaeger/pulpissimo/sim +UVM_NO_RELNOTES +ENTRY_POINT=0x1c008080 -permit_unmatched_virtual_intf +VSIM_PATH=/home/sjaeger/pulpissimo/sim work.vopt_tb -sdfmax /tb_pulp/i_dut/soc_domain_i/pulp_soc_i/fc_subsystem_i/fc_hwpe_gen/i_fc_hwpe/i_mac_top_wrap/u1=/home/sjaeger/pulpissimo/ips/hwpe-mac-engine/impl/out/mac_top_wrap_layout.sdf -gUSE_SDVT_SPI=0 -gUSE_SDVT_CPI=0 -gBAUDRATE=115200 -gENABLE_DEV_DPI=0 -gLOAD_L2=JTAG -gUSE_SDVT_I2S=0
+
+make clean all run gui=1
+
+Simulate->Start Simulation
+
+Select design unit `work.vopt_tb`
+
+in SDF tab select sdf file (`impl/out/mac_top_wrap_layout.sdf`) for entity `/tb_pulp/i_dut/soc_domain_i/pulp_soc_i/fc_subsystem_i/fc_hwpe_gen/i_fc_hwpe/i_mac_top_wrap/u1` with delay `max`.
+
+Start with OK
+
+```
+do ../../power_sim.do
+```
+
 ### Power Estimation
 
 ## Credits
@@ -88,14 +102,8 @@ make clean build
 This project is based on [PULPissmo](https://github.com/pulp-platform/pulpissimo) (as of [September 29, 2021](https://github.com/pulp-platform/pulpissimo/commit/3c9bde1b539679401d4e204716c43bf9422e026d)) including the PULP [Hardware MAC Engine](https://github.com/pulp-platform/hwpe-mac-engine) and the [PULP Runtime Examples](https://github.com/pulp-platform/pulp-rt-examples). The required tools were kindly provided by the [Institute of Computer Technology at TU Wien](https://www.ict.tuwien.ac.at/).
 
 
-
 aes sw and hw
 
-## Goal
-
-- open source
-- low power
-- security
 
 ## Simulation
 

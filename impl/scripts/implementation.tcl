@@ -88,7 +88,6 @@ route_design
 opt_design -post_route -setup -hold -report_dir ${_REPORTS_PATH}/${DESIGN}/layout_postroute_opt/
 
 if {$DESIGN == "mac_engine"} {
-    # fix remaining hold time violations (all these signals have fanout 1)
     set violations [get_nets a_i_data*]
     set violations [add_to_collection $violations [get_nets a_i_valid]]
     set violations [add_to_collection $violations [get_nets b_i_data*]]
@@ -104,11 +103,29 @@ if {$DESIGN == "mac_engine"} {
     foreach_in_collection net ${violations}  {
       eco_add_repeater -cells BUFFD2HPBWP -net [get_object_name ${net}]
     }
+} elseif {$DESIGN == "mac_top_wrap"} {
+    # fix remaining hold time violations (all these signals have fanout 1)
+    set violations [get_nets {tcdm_r_data[0]*}]
+    set violations [add_to_collection $violations [get_nets {tcdm_r_data[1]*}]]
+    set violations [add_to_collection $violations [get_nets {tcdm_r_valid[0]}]]
+    set violations [add_to_collection $violations [get_nets {tcdm_r_valid[1]}]]
+    set violations [add_to_collection $violations [get_nets {tcdm_gnt[0]}]]
+    set violations [add_to_collection $violations [get_nets {tcdm_gnt[1]}]]
+    set violations [add_to_collection $violations [get_nets periph_id*]]
+    # set violations [add_to_collection $violations [get_nets periph_data*]]
+    set violations [add_to_collection $violations [get_nets periph_be*]]
+
+    # Might cause IMPSP-2020 which leads to ERROR IMPSP-2021. However, this only leads to not placed filler cells
+    # this should not be a problem
+    foreach_in_collection net ${violations}  {
+      eco_add_repeater -cells BUFFD2HPBWP -net [get_object_name ${net}]
+    }
 }
 
 # fillers before eco cause spurious violations
 add_fillers -base_cells {FILL16HPBWP FILL1HPBWP FILL2HPBWP FILL32HPBWP FILL4HPBWP FILL64HPBWP FILL8HPBWP} -density 0.7
 check_drc -limit 1000000 -out_file ${_REPORTS_PATH}/${DESIGN}/layout_drc_prefix.rpt
+check_connectivity -out_file ${_REPORTS_PATH}/${DESIGN}/layout_connectivity_prefix.rpt
 add_fillers -fix_drc -base_cells {FILL16HPBWP FILL1HPBWP FILL2HPBWP FILL32HPBWP FILL4HPBWP FILL64HPBWP FILL8HPBWP} -density 0.7
 
 check_connectivity -out_file ${_REPORTS_PATH}/${DESIGN}/layout_connectivity_eco.rpt
@@ -123,10 +140,11 @@ check_metal_density -layer {M1 M2 M3 M4 M5 M6} -report ${_REPORTS_PATH}/${DESIGN
 # set_via_fill  -layer {VIA1 VIA2 VIA3 VIA4 VIA5}
 set_metal_fill -layer M6 -active_spacing 1.0 -window_size 20.0 20.0 -window_step 10.0 10.0 -min_density 1 -max_density 90 -preferred_density 35
 set_metal_fill -layer M5 -active_spacing 1.0 -window_size 20.0 20.0 -window_step 10.0 10.0 -min_density 1 -max_density 90 -preferred_density 35
+set_metal_fill -layer M4 -active_spacing 1.0 -window_size 20.0 20.0 -window_step 10.0 10.0 -min_density 1 -max_density 90 -preferred_density 35
 
 # Via fill not working properly as via density not (correctly) in LEF file (?)
 #add_via_fill -layer {VIA1 VIA2 VIA3 VIA4 VIA5} -modes all
-add_metal_fill -layers {M5 M6} -timing_aware sta -slack_threshold 0.1
+add_metal_fill -layers {M4 M5 M6} -timing_aware sta -slack_threshold 0.1
 
 check_connectivity -out_file ${_REPORTS_PATH}/${DESIGN}/layout_connectivity.rpt
 check_drc -limit 1000000 -out_file ${_REPORTS_PATH}/${DESIGN}/layout_drc.rpt
@@ -152,6 +170,7 @@ report_timing -output_format gtd -max_paths 10000 -max_slack 1.0 -path_exception
 
 # netlist and sdf for post-layout simulation
 write_netlist ${_OUTPUTS_PATH}/${DESIGN}_layout.v
+write_netlist -flat ${_OUTPUTS_PATH}/${DESIGN}_layout_flat.v
 write_sdf ${_OUTPUTS_PATH}/${DESIGN}_layout.sdf -gate_level_sim_model -recompute_delaycal -target_application verilog -cell_timing nochecks -precision 5
 
 write_do_lec -log_file ${_REPORTS_PATH}/${DESIGN}/lec_layout.log -flat -verbose \
