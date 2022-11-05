@@ -1,12 +1,58 @@
 # AES Hardware Processing Engine
 
-## Goal
+This project integrates the [aes_128](https://github.com/www-asics-ws/aes_128) encryption IP into the [PULPissmo](https://github.com/pulp-platform/pulpissimo) system-on-chip. It is based on the [Hardware MAC Engine](https://github.com/pulp-platform/hwpe-mac-engine) which is a template hardware processing engine (HWPE).
 
-// TODO define abbreviation HWPE
+The HWPE has been verified in simulation and in FPGA emulation. Furthermore, an ASIC implementation was done to estimate the energy required per encryption.
 
 ## Architecture
 
+The data (both word & key) are fed into the unmodified AES encryption core via word stackers which create the required 128-bit data words. 
+Additionally, the output is fed back to the data input to implement [Cipher Block Chaining (CBC)](https://en.wikipedia.org/wiki/Block_cipher_mode_of_operation#Cipher_block_chaining_(CBC)). A word unstacker serialises the output to 32 bit wide words.
+
+![AES HWPE Architecture](doc/figures/hwpe_aes_update.png)
+
+This design supports 128 bit AES encryption in the CBC mode of operation with variable numbers of encryptions. The HWPE uses slightly simplified memory interfaces and control logic from the MAC Engine. Thus, it can be configured via PULPissimo's peripheral bus.
+
 ## Results
+
+### FPGA Implementation
+
+The following resources are consumed by the AES HWPE on an Digilent Genesys 2 board:
+
+Entity | LUTs | Registers | BRAM Tiles
+--- | --- | --- | ---
+FPGA | 203800 | 407600 | 445
+PULPissimo | 58656 | 45155 | 144
+HWPE Top | 3892 | 3115 | 0
+HWPE Ctrl | 172 | 165 | 0
+HWPE Streamer | 2151 | 1886 | 0
+HWPE Engine | 1569 | 1064 | 0
+AES Core | 1247 | 530 | 0
+Word Stacker (each) | 26 | 131 | 0
+Word Unstacker | 118 | 131 | 0
+
+### ASIC Implementation
+
+An ASIC implementation flow with a TSMC 65nm technology yields the following results:
+
+- Clock frequency 625 MHz
+- Timing clean for worst case (0.9 V 125°C) and best case (1.1 V 0°C)
+- DRC clean
+- Core Area 69420.8 um^2 (83056 um^2 including physical cells)
+- 25509 standard cells
+
+// TODO document energy
+
+### Hardware vs. Software
+
+Metric | CPU | HWPE
+--- | --- | --- 
+Code Size [bytes] | 10052 |  9100
+Execution Time [cycles] | ~18000 | ~100
+Area Overhead (TSMC65) | 0 | 83056 um^2
+Energy/Encrpytion |  |  
+
+Code size and execution time were measured with a demo program encrypting four 128-bit words both on the CPU and the HWPE.
 
 ## Prerequisites
 
@@ -22,13 +68,11 @@ The following tools are required:
 
 The ASIC synthesis requires access to the TSMC 65nm general purpose PDK. For this project, the [Europractice version](https://europractice-ic.com/technologies/asics/tsmc/) was used.
 
-For the FPGA demo, a Digilent Genesys2 board was used.
+The FPGA demo was flashed onto a Digilent Genesys2 board.
 
 ## Getting Started
 
 Clone this repository into your `pulpissimo/ips` directory. Then replace the default `hwpe-mac-engine` with this HWPE:
-
-// TODO symbolic link?, test
 
 ```
 cd pulpissimo/ips
@@ -37,9 +81,12 @@ rm -rf hwpe-mac-engine
 mv hwpe-aes hwpe-mac-engine
 ```
 
-Now you should be ready to run some code on your enhanced PULPissimo. Use the programs in the `sw` directory to evaluate AES encryptions both in software and in the HWPE. The test vectors are taken from the [NIST Special Publication 800-38A](https://nvlpubs.nist.gov/nistpubs/Legacy/SP/nistspecialpublication800-38a.pdf).
+Now you should be ready to run some code on your enhanced PULPissimo. Use the programs in the `sw` directory to evaluate AES encryptions both in software and in the HWPE.
 
 ### RTL Simulation
+
+// TODO
+[PULP Runtime Examples](https://github.com/pulp-platform/pulp-rt-examples)
 
 // TODO
 rtl/pulpissimo/pulpissimo.sv
@@ -61,6 +108,11 @@ to start the simulation in Questa Sim. You might want to add `gui=1` and the pro
 
 Navigate into the `impl` directory. There, run `make pnr` to run the RTL to GDSII flow.
 
+// TODO where to place this
+
+The test vectors are taken from the [NIST Special Publication 800-38A](https://nvlpubs.nist.gov/nistpubs/Legacy/SP/nistspecialpublication800-38a.pdf).
+
+
 ### Post-Synthesis Simulation
 
 Engine only vs full hwpe
@@ -78,8 +130,6 @@ Comment in the proper section of `src_files.yml`. Then, run the following in the
 make scripts
 make clean build
 ```
-
-vsim -c -quiet -L models_lib -L vip_lib -t ps +nowarnTRAN +nowarnTSCALE +nowarnTFMPC +TB_PATH=/home/sjaeger/pulpissimo/sim +UVM_NO_RELNOTES +ENTRY_POINT=0x1c008080 -permit_unmatched_virtual_intf +VSIM_PATH=/home/sjaeger/pulpissimo/sim work.vopt_tb -sdfmax /tb_pulp/i_dut/soc_domain_i/pulp_soc_i/fc_subsystem_i/fc_hwpe_gen/i_fc_hwpe/i_mac_top_wrap/u1=/home/sjaeger/pulpissimo/ips/hwpe-mac-engine/impl/out/mac_top_wrap_layout.sdf -gUSE_SDVT_SPI=0 -gUSE_SDVT_CPI=0 -gBAUDRATE=115200 -gENABLE_DEV_DPI=0 -gLOAD_L2=JTAG -gUSE_SDVT_I2S=0
 
 make clean all run gui=1
 
@@ -99,10 +149,7 @@ do ../../power_sim.do
 
 ## Credits
 
-This project is based on [PULPissmo](https://github.com/pulp-platform/pulpissimo) (as of [September 29, 2021](https://github.com/pulp-platform/pulpissimo/commit/3c9bde1b539679401d4e204716c43bf9422e026d)) including the PULP [Hardware MAC Engine](https://github.com/pulp-platform/hwpe-mac-engine) and the [PULP Runtime Examples](https://github.com/pulp-platform/pulp-rt-examples). The required tools were kindly provided by the [Institute of Computer Technology at TU Wien](https://www.ict.tuwien.ac.at/).
-
-
-aes sw and hw
+Thanks to Nahla and the [Institute of Computer Technology at TU Wien](https://www.ict.tuwien.ac.at/en/) for providing me with tools, technology files, FPGA boards, and patient support.
 
 
 ## Simulation
@@ -180,6 +227,8 @@ Safer operation with [cipher block chaining (CBC)](https://en.wikipedia.org/wiki
 4 cycles after completion until event
 
 -> 83 cycles per 128 bit encryption
+
+-> additionally setting config -> 104 cycles from first bus op until evt
 
 ### Resource consumption (Nexys 4DDR)
 
