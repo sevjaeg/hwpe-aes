@@ -15,6 +15,7 @@
  */
 
 /* 
+ * Based on PULP Runtime Examples (https://github.com/pulp-platform/pulp-rt-examples)
  * Template Author:  Francesco Conti <fconti@iis.ee.ethz.ch>
  */
 
@@ -25,8 +26,9 @@
 #include "hal/hwme/hwme_v1.h"
 
 // ---------- Only change parameters in this section ----------
-#define DEMO 1  // print out status, check results
-#define SAFE 1  // use CBC instead of ECB (0 not supported by
+#define DEMO 1  // print out status, check results.
+                // Set to 0 for power estimation
+#define CBC 1  // use CBC instead of ECB (0 not supported by
                 // default hw configuration)
 #define DEBUG 0
 
@@ -36,7 +38,7 @@
 #define N 1
 // ------------------------------------------------------------
 
-#if SAFE
+#if CBC
 #define WORDS 4  // larger test vector (otherwise results identical to ECB)
 #else
 #define WORDS 1
@@ -46,7 +48,7 @@ int main() {
 
   // Test data (storing in words instead of bytes solves ordering issues)
   uint32_t key[] = {0x2b7e1516, 0x28aed2a6, 0xabf71588, 0x09cf4f3c};
-  #if SAFE
+  #if CBC
   // input words                  
   uint32_t in[]  = {0x6bc1bee2, 0x2e409f96, 0xe93d7e11, 0x7393172a,
                     0xae2d8a57, 0x1e03ac9c, 0x9eb76fac, 0x45af8e51,
@@ -62,7 +64,7 @@ int main() {
   uint32_t out[] = {0x3ad77bb4, 0x0d7a3660, 0xa89ecaf3, 0x2466ef97};
   #endif
 
-  // TCDM pointers passed to HWCE
+  // TCDM addresses for HWPE (currently hardwired in rtl/mac_fsm.sv)
   uint32_t *a = (uint8_t *) 0x1c010000;
   uint32_t *b = (uint8_t *) 0x1c010200;
   uint32_t *d = (uint8_t *) 0x1c010400;
@@ -95,10 +97,10 @@ int main() {
     #endif
 
     plp_hwme_enable();
+    soc_eu_fcEventMask_setEvent(ARCHI_SOC_EVENT_FCHWPE0);
 
     while(hwme_acquire_job() < 0);
 
-    // TCDM addresses (currently hardwired)
     // hwme_a_addr_set((unsigned int) a);
     // hwme_b_addr_set((unsigned int) b);
     // hwme_d_addr_set((unsigned int) d);
@@ -118,8 +120,6 @@ int main() {
     #if DEMO
     start_time = rt_time_get_us();
     #endif
-
-    soc_eu_fcEventMask_setEvent(ARCHI_SOC_EVENT_FCHWPE0);
 
     #if DEBUG
     printf("Starting HWCE computation");

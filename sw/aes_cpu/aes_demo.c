@@ -14,9 +14,10 @@
  * limitations under the License.
  */
 
- /*
-  * This file is paritally modified from https://github.com/kokke/tiny-AES-c
-  */
+/* 
+ * Based on PULP Runtime Examples (https://github.com/pulp-platform/pulp-rt-examples)
+ * Template Author:  Francesco Conti <fconti@iis.ee.ethz.ch>
+ */
 
 #include <stdio.h>
 #include <stdint.h>
@@ -26,7 +27,7 @@
 #include "aes.h"
 
 #define DEMO 1
-#define SAFE 1  // use CBC instead of ECB
+#define CBC 1  // use CBC instead of ECB
 #define N 1  // Number of (identical) encryptions
 
 static int test_encrypt_ecb(unsigned long *start_time, unsigned long *end_time);
@@ -43,7 +44,7 @@ int main()
   #endif
   
   for(int i=0; i<N; ++i) {
-    #if SAFE
+    #if CBC
     exit = test_encrypt_cbc(&start_time, &end_time);
     #else
     exit = test_encrypt_ecb(&start_time, &end_time);
@@ -60,7 +61,7 @@ int main()
   
   #if DEMO
   printf("Status %d\n", exit);
-  #if SAFE
+  #if CBC
   printf("Runtime for 16x%d words (CBC): %lu us\n", N, runtime);
   #else
   printf("Runtime for 4x%d words (ECB): %lu us\n", N, runtime);

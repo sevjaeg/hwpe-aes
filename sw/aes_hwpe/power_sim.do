@@ -1,5 +1,5 @@
 restart -f
-run 12000 us
+run 11500 us
 
 add wave -r sim:/tb_pulp/i_dut/soc_domain_i/pulp_soc_i/fc_subsystem_i/fc_hwpe_gen/i_fc_hwpe/i_mac_top_wrap/*
 run -all

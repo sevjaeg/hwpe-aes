@@ -1,5 +1,5 @@
 sim-aes-sw:
-	make -C sw/aes_sw clean all run
+	make -C sw/aes_cpu clean all run
 
 sim-aes-hw:
 	make -C sw/aes_hwpe clean all run

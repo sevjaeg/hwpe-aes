@@ -196,7 +196,6 @@ module mac_engine
   end
 
   assign flags_o.cnt = r_cnt;
-  // TODO (1 should work)
   assign flags_o.acc_valid = ctrl_i.enable;
 
   // Ready signals have to be propagated backwards through pipeline stages (combinationally).

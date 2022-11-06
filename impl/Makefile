@@ -97,15 +97,15 @@ check-pnr: pnr
 sta:
 	export CADENCE_DESIGN=$(DESIGN) && tempus -stylus -log $(LOG_DIR)/$(DESIGN)_tempus -files $(SCRIPT_DIR)/sta.tcl
 
-# TODO update
 power:
 	@echo ""
-	@echo "----------------------------------------------------------------------------------------"
-	@echo "| Power estimation is only meaningful for DESIGN=aes_engine                            |"
-	@echo "| Make sure you ran 'make cli' in tb/mac_engine/post-layout-power to have an           |"
-	@echo "| up-to-date .vcd file and set the respective start and end times in scripts/power.tcl |"
-	@echo "----------------------------------------------------------------------------------------"
-	@echo ""
+	@echo "-------------------------------------------------------------------------------------"
+	@echo "| Power estimation is only meaningful for DESIGN=aes_engine or mac_top_wrap         |"
+	@echo "| Make sure you ran 'make cli' in tb/mac_engine/post-layout-power or the PULPissimo |"
+	@echo "| post-layout simulation (s. README.md) to have an up-to-date .vcd file and set the |"
+	@echo "| respective start and end times in scripts/power.tcl                               |"
+	@echo "-------------------------------------------------------------------------------------"
+	@echo
 	
 	export CADENCE_DESIGN=$(DESIGN) && voltus -stylus -no_gui -batch -log $(LOG_DIR)/$(DESIGN)_voltus \
 	                                          -files $(SCRIPT_DIR)/power.tcl

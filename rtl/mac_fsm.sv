@@ -56,8 +56,6 @@ module mac_fsm
 
   assign ctrl_uloop_o.ready = 1'b1;
 
-  // TODO hardwire regs with param
-
   always_comb
   begin : main_fsm_comb
     // direct mappings - these have to be here due to blocking/non-blocking assignment

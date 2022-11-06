@@ -2,7 +2,7 @@
 *	Voltus Power Analysis - Power Calculator - Version v20.11-s014_1 64-bit (08/10/2020 16:19:31)
 *	Copyright 2007, Cadence Design Systems, Inc.
 *
-* 	Date & Time:	2022-Nov-01 18:12:40 (2022-Nov-01 17:12:40 GMT)
+* 	Date & Time:	2022-Nov-06 20:33:54 (2022-Nov-06 19:33:54 GMT)
 *
 *----------------------------------------------------------------------------------------
 *
@@ -18,11 +18,11 @@
 *	        design.spef1
 *
 *	DEF Files used: 
-*	        /tmp/ssv_tmpdir_3315821_7uiJkk/eps_out_3315821.def.gz
+*	        /tmp/ssv_tmpdir_4100476_ABi9jq/eps_out_4100476.def.gz
 *
 *	Switching Activity File used: 
 *	        ../sw/aes_hwpe/wave.vcd
-*                    Vcd Window used(Start Time, Stop Time):  (12158067.276854,12159769.388902) 
+*                    Vcd Window used(Start Time, Stop Time):  (11567537.798152,11569457.982207) 
 *                     Vcd Scale Factor: 1 
 * *                    Design annotation coverage: 19168/19168 = 100% 
 *
@@ -49,35 +49,35 @@
 
 Total Power 
 -----------------------------------------------------------------------------------------
-Total Internal Power:        1.74373370 	   60.9773%
-Total Switching Power:       0.67610505 	   23.6430%
-Total Leakage Power:         0.43980683 	   15.3798%
+Total Internal Power:        1.69505890 	   61.4826%
+Total Switching Power:       0.62679812 	   22.7350%
+Total Leakage Power:         0.43511783 	   15.7824%
 Total X Tran Power:      	    0.0000
 Total Z Tran Power:      	    0.0000
-Total Power:                 2.85964558 
+Total Power:                 2.75697484 
 -----------------------------------------------------------------------------------------
 
 
 Group                           Internal   Switching     Leakage       Total  Percentage 
                                 Power      Power         Power         Power  (%)        
 -----------------------------------------------------------------------------------------
-Sequential                         1.394     0.08095      0.1596       1.634       57.15 
+Sequential                         1.377     0.07148      0.1591       1.607        58.3 
 Macro                                  0           0           0           0           0 
 IO                                     0           0           0           0           0 
-Combinational                     0.2784      0.3488      0.2745      0.9017       31.53 
-Clock (Combinational)            0.07174      0.2463    0.005662      0.3237       11.32 
+Combinational                     0.2466       0.309      0.2704      0.8259       29.96 
+Clock (Combinational)             0.0717      0.2463    0.005662      0.3237       11.74 
 Clock (Sequential)                     0           0           0           0           0 
 -----------------------------------------------------------------------------------------
-Total                              1.744      0.6761      0.4398        2.86         100 
+Total                              1.695      0.6268      0.4351       2.757         100 
 -----------------------------------------------------------------------------------------
 
 
 Clock                           Internal   Switching     Leakage       Total  Percentage 
                                 Power      Power         Power         Power  (%)        
 -----------------------------------------------------------------------------------------
-clock                              1.744      0.6761      0.4388       2.859       99.96 
+clock                              1.695      0.6268      0.4341       2.756       99.96 
 -----------------------------------------------------------------------------------------
-Total (excluding duplicates)       1.744      0.6761      0.4398        2.86         100 
+Total (excluding duplicates)       1.695      0.6268      0.4351       2.757         100 
 -----------------------------------------------------------------------------------------
 
 Clock: clock
@@ -89,7 +89,7 @@ Clock Static Probability:  0.5000
 Rail                  Voltage   Internal   Switching     Leakage       Total  Percentage 
                                 Power      Power         Power         Power  (%)        
 -----------------------------------------------------------------------------------------
-VDD                         1      1.744      0.6761      0.4398        2.86         100 
+VDD                         1      1.695      0.6268      0.4351       2.757         100 
 
 
 -----------------------------------------------------------------------------------------

@@ -1,2 +1,2 @@
 clean:
-	rm -rf aes_sw/build aes_hwpe/build
+	rm -rf aes_cpu/build aes_hwpe/build

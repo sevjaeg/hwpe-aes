@@ -9,19 +9,22 @@ set_db power_vector_based_multithread true
 set_db power_view TSMC65G_av_typ
 set_db power_dynamic_power_view TSMC65G_av_typ
 set_db power_method dynamic_vectorbased
-# TODO vector_profile?
-
-set_db power_worst_step_size 800ps
-set_db power_default_frequency 625
 
 if {$DESIGN == "mac_engine"} {
-    
-    read_activity_file -format VCD -scope test/dut/u1 -start 44.0 -end 27903.2 -block {} ../tb/aes_engine/post-layout-power/wave.vcd
-} elseif {$DESIGN == "mac_top_wrap"} {
-    read_activity_file -format VCD -scope tb_pulp/i_dut/soc_domain_i/pulp_soc_i/fc_subsystem_i/fc_hwpe_gen/i_fc_hwpe/i_mac_top_wrap/u1 -start 12158066.933 -end 12159769.045 -block {} ../sw/aes_hwpe/wave.vcd
-}
+    set_db power_worst_step_size 800ps
+    set_db power_default_frequency 625
 
-# report_vector_profile -steps 800ps -detailed_report true -emulate_sdf true -out_file $_REPORTS_PATH/${DESIGN}/layout_power_vcd.rpt
+    ## Pipelined operation (1024 encryptions) - only select one
+    read_activity_file -format VCD -scope test/dut/u1 -start 44.0 -end 27903.2 -block {} ../tb/aes_engine/post-layout-power/wave.vcd
+    
+    ## Single encryption - only select one
+    # read_activity_file -format VCD -scope test/dut/u1 -start 5.6 -end 39.2 -block {} ../tb/aes_engine/post-layout-power/wave.vcd
+} elseif {$DESIGN == "mac_top_wrap"} {
+    # Note that the RTL simulation is running at 50 MHz
+    set_db power_worst_step_size 10ns
+    set_db power_default_frequency 50
+    read_activity_file -format VCD -scope tb_pulp/i_dut/soc_domain_i/pulp_soc_i/fc_subsystem_i/fc_hwpe_gen/i_fc_hwpe/i_mac_top_wrap/u1 -start 11567537.471 -end 11569457.655  -block {} ../sw/aes_hwpe/wave.vcd
+}
 
 set_db power_method vector_profile
 
