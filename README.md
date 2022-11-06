@@ -1,4 +1,4 @@
-# AES Hardware Processing Engine
+# AES Hardware Processing Engine (HWPE)
 
 This project integrates the [aes_128](https://github.com/www-asics-ws/aes_128) encryption IP into the [PULPissmo](https://github.com/pulp-platform/pulpissimo) system-on-chip. It is based on the [Hardware MAC Engine](https://github.com/pulp-platform/hwpe-mac-engine) which is a template hardware processing engine (HWPE).
 
