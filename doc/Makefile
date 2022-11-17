@@ -1,10 +1,10 @@
-FILENAME=slides
+FILENAME=report
 BUILD_DIR=build
 
-all: outdir pdf
+all: pdf
 
-pdf:
-	pdflatex -output-directory=${BUILD_DIR} -aux-directory=${BUILD_DIR} ${FILENAME}.tex
+pdf: outdir
+	pdflatex -output-directory=${BUILD_DIR} ${FILENAME}.tex
 	biber --input-directory=${BUILD_DIR} --output-directory=${BUILD_DIR} $(FILENAME)
 	pdflatex -output-directory=${BUILD_DIR} ${FILENAME}.tex
 	pdflatex -output-directory=${BUILD_DIR} ${FILENAME}.tex
@@ -14,3 +14,5 @@ outdir:
 
 clean:
 	rm -rf build
+
+.PHONY: all pdf outdir clean

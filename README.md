@@ -55,6 +55,8 @@ Cycles per further encryption | ~4500 | 17
 Area Overhead (TSMC65) [um^2] | 0 | 83056
 Energy/Encrpytion [nJ] | ~46 | ~1 (CPU) + 1 (HWPE) = 2
 
+// TODO update
+
 Code sizes and execution times were measured with a demo program encrypting four 128-bit words both on the CPU and the HWPE.
 
 The energy assumes a (quite optimistic) 10 pJ/operation CPU running at 650 MHz.
@@ -112,7 +114,7 @@ Navigate into the `impl` directory. There, run `make pnr` to run the RTL to GDSI
 
 The behaviour of the synthesised HWPE can be verified and analysed with post-synthesis and post-layout simulations. The test benches from the `tb` directory cover subsets of the HWPE. To simulate the full HWPE inside PULPissimo, modify the `src_files.yml` file.
 
-Furthermore, a simulation library of the technology has to be placed in `impl/hdl`. As the synthesised design does not provide any parameters, comment out line 78 in `pulpissimo/ips/pulp_soc/rtl/fc/fc_hwpe.sv `:
+Furthermore, a simulation library of the technology has to be placed in `impl/hdl`. As the synthesised design does not provide any parameters, comment out line 78 in `pulpissimo/ips/pulp_soc/rtl/fc/fc_hwpe.sv`:
 
 ```verilog
 mac_top_wrap #(

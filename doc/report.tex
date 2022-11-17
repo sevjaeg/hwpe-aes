@@ -19,6 +19,7 @@
 \usepackage{tensor}  % allows fancy indices
 \usepackage{siunitx}  % easy handling of value + unit (e.g. \SI{10}{\pF})
 % \sisetup{}  % configure siunitx (e.g. locale = DE)
+\sisetup{math-micro=\text{µ},text-micro=µ} % add /micro
 \sisetup{output-complex-root=\ensuremath{\mathrm{j}}, complex-root-position = before-number} % configures SI format 10 + j5 for complex numbers (instead of 10 + 5i)
 
 \usepackage{listings}  % code listings
@@ -240,22 +241,21 @@ The overhead for the first four encryptions relative to each further (contiguous
 
 \Cref{tab:results-genesys} summarises the resource consumption of different entities after synthesis for this target. Clearly, there is still plenty of headroom on the board -- this simplifies placement and routing. The HWPE introduces an overhead of \SI{7.1}{\percent} for LUTs and \SI{7.4}{\percent} for registers respectively. However, the main contributor is not the data path (HWPE engine) but the HWPE streamer which provides the interface to the tighlty-coupled data memory.
 
-\todo{update}
 \begin{table}[h]
     \centering
-    \begin{tabular}{c|c c c}
+    \begin{tabular}{l|r r r}
         \toprule
         Entity &  Look-up-tables & Registers & BRAM tiles \\
         \midrule
 		FPGA &  203800 &  407600 &  445 \\
-		PULPissimo & 58656 & 45155 & 144 \\ 
-		HWPE Top & 3892 & 3115 & 0 \\ 
-		HWPE Ctrl & 172 & 165 & 0 \\ 
-		HWPE Streamer & 2151 & 1886 & 0 \\ 
-		HWPE Engine & 1569 & 1064 & 0 \\ 
-		AES Core & 1247 & 530 & 0 \\ 
-		Word Stacker (each) & 26 & 131 & 0 \\ 
-		Word Unstacker & 118 & 131 & 0 \\
+		\hspace{2mm}PULPissimo & 58656 & 45155 & 144 \\ 
+		\hspace{4mm}HWPE Top & 3892 & 3115 & 0 \\ 
+		\hspace{6mm}HWPE Ctrl & 172 & 165 & 0 \\ 
+		\hspace{6mm}HWPE Streamer & 2151 & 1886 & 0 \\ 
+		\hspace{6mm}HWPE Engine & 1569 & 1064 & 0 \\ 
+		\hspace{8mm}AES Core & 1247 & 530 & 0 \\ 
+		\hspace{8mm}Word Stacker (each) & 26 & 131 & 0 \\ 
+		\hspace{8mm}Word Unstacker & 118 & 131 & 0 \\
         \bottomrule
     \end{tabular}
 	\caption{Resource consumption of the PULPissimo SoC when synthesised for the Genesys~2 evaluation board.}
@@ -267,7 +267,7 @@ The overhead for the first four encryptions relative to each further (contiguous
 
 As the PULP platform is mainly concerned with energy efficiency, the designs are aimed at low-power ASIC technologies (while FPGA is limited to prototyping and demonstration). Therefore, it is interesting to perform ASIC synthesis of the AES engine to obtain comparable area and power figures.
 
-As ASIC implementation is only briefly touched in the TU Wien Embedded Systems curriculum, a major part of the project was getting familiar with the required technologies and tools. Due to their widespread use and availability at the ICT, the Cadence toolchain and the TSMC \SI{65}{nm} technology were used. Further details are discussed in \Cref{sec:asic:tools}.
+ASIC implementation is only briefly touched in the TU Wien Embedded Systems curriculum. Therefore, a major part of the project was getting familiar with the required technologies and tools. Due to their widespread use and availability at the ICT, the Cadence toolchain and the TSMC \SI{65}{nm} technology were used. Further details are discussed in \Cref{sec:asic:tools}.
 
 As the PULPissimo SoC has been taped out several times~\cite{pulp-chips}, the implementation is limited to the AES HWPE. The corresponding flow is outlined in the rest of this section. However, as discussed in \Cref{sec:asic:verification}, the ASIC verification showed some issues in the design which required small design changes which unfortunately limit the design versatility.\todo{reference}
 
@@ -319,11 +319,79 @@ The Genus synthesis flow replaces the RTL model with generic cells, then finds s
 
 \subsection{Results} \label{sec:asic:results}
 
-\todo{layout image}
 
-\todo{area post synthesis and layout: per entity, physical cells}
+\Cref{fig:layout}
+%pins left unconnected
 
-\todo{timing incl. critical path, latch issues}
+\begin{figure} [h]
+	\centering
+	\includegraphics[width=0.6\textwidth]{layout.png}
+	\caption{Final layout with the AES engine in blue, the streamer in green, and the control pane in yellow}
+	\label{fig:layout}
+\end{figure}
+
+
+\Cref{fig:clock-tree}
+
+\begin{figure} [h]
+	\centering
+	\includegraphics[width=0.6\textwidth]{clock_tree.png}
+	\caption{TODO}
+	\label{fig:clock-tree}
+\end{figure}
+
+% TODO
+
+\begin{figure} [h]
+	\centering
+	\includegraphics[width=0.6\textwidth]{cts.png}
+	\caption{TODO}
+	\label{fig:clock-tree-latency}
+\end{figure}
+
+
+
+\todo{text area} \Cref{tab:results-area}
+
+\begin{table}[h]
+    \centering
+    \begin{tabular}{l|r r r r}
+        \toprule
+        Entity &  Synthesis & Layout comb. & Layout seq. & Layout total \\
+        \midrule
+		Floorplan &  &  & & 88863.6 \\ 
+		\hspace{2mm}HWPE Top & 66642.0 & 42858.0  & 26562.8 & 69420.8 \\ 
+		\hspace{4mm}HWPE Ctrl & 2559.2 & 1606.4 & 1525.6 & 3132.0  \\ 
+		\hspace{4mm}HWPE Streamer & 27162.0 & 13696.0 & 14834.8 & 28530.8 \\ 
+		\hspace{4mm}HWPE Engine & 36920.8 & 26820.4 & 10202.4 & 37022.8 \\ 
+		\hspace{6mm}AES Core & 29442.0 & 24318.0 & 5083.2 & 29401.2 \\ 
+		\hspace{6mm}Word Stacker Key & 1622.8 & 470.8  & 1152.8 & 1623.6 \\ 
+		\hspace{6mm}Word Stacker Data & 1622.8 & 502.4 & 1152.8 & 1655.2 \\ 
+		\hspace{6mm}Word Unstacker & 1853.2 & 701.2 & 1152.8 & 1854.0 \\
+		\hspace{2mm}Physical Cells &  &  & & 19442.8 \\ 
+		\hspace{4mm}Filler Cells &  &  & & 13635.2 \\ 
+		\hspace{4mm}Clock Tree &  &  & & 339.2\\ 
+        \bottomrule
+    \end{tabular}
+	\caption{Area (in $\textrm{\micro m}^2$) of the AES HWPE after synthesis and implementation}
+	\label{tab:results-area}
+\end{table}
+
+\todo{timing incl. critical path, latch issues} \Cref{tab:results-timing}
+
+\begin{table}[h]
+    \centering
+    \begin{tabular}{l|c c c}
+        \toprule
+         & Corner &  Slack synthesis & Slack layout \\
+        \midrule
+		Setup & TSMC65G\_av\_slow & \SI{0}{ns} & \SI{0}{ns} \\ 
+		Hold & TSMC65G\_av\_fast & - & \SI{0.001}{ns} \\ 
+        \bottomrule
+    \end{tabular}
+	\caption{Timing slack (in $\textrm{ns}$) of the AES HWPE after synthesis and implementation}
+	\label{tab:results-timing}
+\end{table}
 
 \todo{power consumption: where does the energy go?}
 
