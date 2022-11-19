@@ -203,6 +203,12 @@ Adding CBC support to the AES HWPE requires only small modifications. Firstly, a
 
 The used reference software implementation \cite{tiny-aes-c} already provides build-in CBC support and thus only a preprocessor flag has to be set. Again, a short self-checking demo application was written both for the PULPissimo CPU using the library and the HWPE. Both use the same set of data from the NIST examples~\cite{NIST}. To make sure the cipher feedback is done correctly, blocks of four encryptions are executed as the output data does not differ between ECB and CBC for a single encryption. In a first step, the HPWE was evaluated in a RTL simulation where both the reference program and the HWPE application yielded the expected results.
 
+\subsection{Control Debugging} \label{sec:improvements:control}
+
+Unfortunately, the HWPE did with default control logic did not work on the selected FPGA platform. During ASIC verification (s. \Cref{sec:asic:verification}), a previously-known issue \cite{pulpissimo-issue} was discovered. The original control allowed flexible pointers for the input and output data of the HWPE. However, after synthesis, the control logic produced incorrect addresses. 
+
+As a solution, the addresses were hardwired in the accelerator. Of course, this imposes limitations on feasible computations as the input data size is now limited by the distance of the data start addresses. On the other hand, this saves several registers and simplifies the address calculation logic in the control pane and reduces the code size slightly. Ultimately, the AES HWPE has (besides control and status bits) only one configurable parameter: The input data size (which is assumed equal for key and data words).
+
 \subsection{FPGA Demonstration}
 
 An important part of this project was evaluating the AES HWPE on an FPGA target as FPGA synthesis was not achieved during the prior course. Initially, the selected target was the Digilent Nexys~4~DDR board which is supported by the scripts in the PULPissimo repository. However, the design fills the board almost entirely (s. \Cref{sec:improvements:results}) which makes placement and routing times extremely long. Furthermore, an external JTAG debugger is required to run code on the SoC as the built-in JTAG interface is not supported. Therefore, the Digilent Genesys~2 evaluation board was selected as it features a significantly larger Xilinx FPGA from the same generation and the provided synthesis scripts support its on-board JTAG unit.
@@ -211,11 +217,9 @@ As outlined in \Cref{sec:implementation:setup}, a mounted file system was used t
 
 Executing an application with PULPissimo on an FPGA requires a debugging session consisting of a debugger (in this case \texttt{gdb}) and an OpenOCD server providing an interface to the on-board JTAG unit. Then, the executable can be flashed onto the FPGA and the output can be observed via UART. Again, the software implementation worked flawlessly. 
 
-\todo{move to other position}However, the issued described in \Cref{sec:asic:verification} were observed on the FPGA demonstrator as well. Thus, the HWPE was only successfully demonstrated after applying the changes required for ASIC synthesis.
-
 \subsection{Results} \label{sec:improvements:results}
 
-\subsubsection{Performance}
+\subsubsection{Performance} \label{sec:improvements:results:performance}
 
 Both the reference software implementation and the HPWE program were simulated and the runtimes recorded. All outputs checks passed. As the runtimes for the hardware implementation were hardly measurable from the software, they have been extraced from the waveforms. \Cref{tab:results} compares the software implementation and the HWPE. Clearly, the hardware implementation outperforms the software -- which can not make use of any hardware-accelerated encryption primitives in terms of runtime. The code size decreases for the hardware implementation as the AES functionality (including relatively large look-up tables) is offloaded to hardware. Note that the code size given here is for the full demo program and thus includes not only the AES encryption but also the stimuli and several system routines.
 
@@ -269,7 +273,7 @@ As the PULP platform is mainly concerned with energy efficiency, the designs are
 
 ASIC implementation is only briefly touched in the TU Wien Embedded Systems curriculum. Therefore, a major part of the project was getting familiar with the required technologies and tools. Due to their widespread use and availability at the ICT, the Cadence toolchain and the TSMC \SI{65}{nm} technology were used. Further details are discussed in \Cref{sec:asic:tools}.
 
-As the PULPissimo SoC has been taped out several times~\cite{pulp-chips}, the implementation is limited to the AES HWPE. The corresponding flow is outlined in the rest of this section. However, as discussed in \Cref{sec:asic:verification}, the ASIC verification showed some issues in the design which required small design changes which unfortunately limit the design versatility.\todo{reference}
+As the PULPissimo SoC has been taped out several times~\cite{pulp-chips}, the implementation is limited to the AES HWPE. The corresponding flow is outlined in the rest of this section. However, as discussed in \Cref{sec:improvements:control,sec:asic:verification}, the ASIC verification showed some issues in the design which required small design changes which unfortunately limit the design versatility.
 
 \subsection{Technology and Tooling} \label{sec:asic:tools}
 
@@ -298,60 +302,57 @@ The Genus synthesis flow replaces the RTL model with generic cells, then finds s
 
 \subsection{Implementation} \label{sec:asic:impl}
 
-\todo{floorplan}
+\subsubsection{Floorplanning and Placement}
 
-\todo{placement + power routing}
+As the AES HWPE is designed to be part of a PULPissimo SoC, the layout is not subject to external placement constraints and no I/O pads or ESD protection cells are required. Therefore, the floorplan creation is quite free. For the sake of simplicity, a quadratic layout was chosen. To ensure good routability, the cell density was set to \SI{75}{\percent}. This lead to a quadratic floorplan of roughly $\SI{300}{\micro m} \times \SI{300}{\micro m}$. Furthermore, a margin of \SI{5.2}{\micro m} was left for power rings. Due to a lack of external constraints, pin placement was left to the tool. Only the pin layers were constrained to the metal layers \numrange{2}{4} to avoid issues with the metal rings on layers $5$ and $6$.
 
-\todo{CTS}
+In a next step, a power grid was constructed. In consist of power rings and stripes for both $V_{DD}$ and $V_{SS}$ on the top metal layers (M5 and M6). Rings and stripes have a width of \SI{2}{\micro m} each and a spacing of \SI{1}{\micro m} to comply with the design rules. Four stripes were placed both horizontally and vertically.
 
-\todo{routing + optimisation}
+After placing the standard cells, the power network was routed. To avoid issues around the power grid metal, jogging\footnote{Routing orthogonal to a layer's default routing direction} was enabled.
 
-\todo{fixing violations}
+\subsubsection{Clock Tree Synthesis, Routing and Timing Optimisation}
 
-\todo{filler cells and metal}
+The clock tree was automatically generated from the timing constraints discussed in \Cref{sec:asic:synthesis}. During this process, the constraints were modified iteratively until a suitable clock tree was generated with a target transition time of \SI{80}{ps}, a latency of \SI{200}{ps}, and a skew of \SI{40}{ps}.
 
-\todo{checks}
+After an optimisation step, the design was routed. During this process, both timing and crosstalk were considered by Innovus to obtain the best results. After routing, a timing optimisation step was conducted to mitigate both setup and hold violations.
 
-\todo{output}
+\subsubsection{Signoff Checks and Fixes} \label{sec:asic:impl:signoff}
 
+Despite the previous timing optimisation step, some hold violations remained. This could have been fixed by introducing additional timing constraints, however in this project additional buffers were added manually. The violations occurred at the TCDM inputs and at the peripheral bus interface. As these are low-fanout nets, additional buffers were introduced easily with the Innovus ECO capabilites.
 
-\subsection{Verification} \label{sec:asic:verification}
+After layouting the design and closing the timing, several design rule violations remained. Firstly, the chosen cell density of \SI{75}{\percent} simplified placement and routing, however several cell density violations remained. This was corrected by adding filler cells. To avoid issues with too high densities, the design was filled up to roughly \SI{93.5}{\percent}. Then, the routing had to be fixed to mitigate design rule violations introduced while adding the fillers. In a next step, metal fill was added to comply with the corresponding rules. This was necessary on the metal layers \numrange{4}{6} and done in a timing-aware fashion not to introduce capacitances which negatively affect the timing.
+
+Eventually, the design was placed, routed, timing-closed and the following checks passed:
+
+\begin{itemize}
+	\item Design rule check (DRC),
+	\item Connectivity check, 
+	\item Metal density check, and
+	\item Static timing analysis (STA).
+\end{itemize}
+
+Further signoff checks including electrical rule check (ERC) and layout-versus-schematic (LVS) were not part of this project as they are not supported by the digital implementation tool.
+
+\subsection{Verification and Power Estimation} \label{sec:asic:verification}
+
+To make sure the design does not only comply to the foundry's design rules but also behaves correctly, both simulation-based and formal verification of the post-synthesis and post-layout netlists was conducted.
+
+Both the post-synthesis and the post-layout netlist were (with the help of a SystemVerilog wrapper) embedded into the PULPissimo simulation platform and the demo program discussed in \Cref{sec:improvements:results} was executed correctly. The post-synthesis netlist was additionally annotated with the extracted delays. However, the simulation was conducted with a frequency of \SI{50}{MHz}. Thus, the results can not be interpreted in the light of dynamic timing analysis.
+
+The post-layout simulation was also used to estimate the power consumption of the AES HWPE. After saving a VCD file including the signal changes in all HWPE nodes, a vector-based power analysis was run with Cadence Voltus. Due to the differing simulator clock frequency, the exact power consumption could only be projected. For validation, a second power analysis was conducted based on the switching activity of a second test bench simulating only the HWPE data path with the correct clock frequncy.
+
+As the simulation environment is limited to a small number of test vectors, verification was also conducted by the means of logic equivalence checking. Thereto, checker scripts were generated with Genus and Innovus. After synthesis, the netlist was compared with the RTL model and after layout the final netlist was checked against the post-synthesis netlist. The checking was performed with the Cadence Conformal LEC tool.
 
 \subsection{Results} \label{sec:asic:results}
 
-
-\Cref{fig:layout}
-%pins left unconnected
+\Cref{fig:layout} shows the generated layout. The control logic is relatively small and features several pins for the peripheral interface. The AES engine itself consumes more than half of the area, but does not have any external pins. Note that the pins on the left side are dangling as they were optimised away during synthesis. The streamer is quite large as it features FIFOs to buffer the data coming from and going to the TCDM. The vast majority of pins is connected to this part of the design. A significant share of the cells does not belong to any of the three entities. Those are the physical cells which include filler cells and the buffers of the clock tree. \Cref{tab:results-area} provides detailed area figures.
 
 \begin{figure} [h]
 	\centering
 	\includegraphics[width=0.6\textwidth]{layout.png}
-	\caption{Final layout with the AES engine in blue, the streamer in green, and the control pane in yellow}
+	\caption{Final layout with the AES engine in blue, the streamer in green, and the control pane in yellow. The pins along the left edge are dangling and therefore not connected to the HWPE internally.}
 	\label{fig:layout}
-\end{figure}
-
-
-\Cref{fig:clock-tree}
-
-\begin{figure} [h]
-	\centering
-	\includegraphics[width=0.6\textwidth]{clock_tree.png}
-	\caption{TODO}
-	\label{fig:clock-tree}
-\end{figure}
-
-% TODO
-
-\begin{figure} [h]
-	\centering
-	\includegraphics[width=0.6\textwidth]{cts.png}
-	\caption{TODO}
-	\label{fig:clock-tree-latency}
-\end{figure}
-
-
-
-\todo{text area} \Cref{tab:results-area}
+\end{figure} 
 
 \begin{table}[h]
     \centering
@@ -377,7 +378,16 @@ The Genus synthesis flow replaces the RTL model with generic cells, then finds s
 	\label{tab:results-area}
 \end{table}
 
-\todo{timing incl. critical path, latch issues} \Cref{tab:results-timing}
+As depicted in \Cref{fig:clock-tree}, the clock tree does not span over the whole HWPE. Instead, notable parts of the AES engine are unclocked. The engine consists of several AES round units which are purely combinational logic. They are placed around the pipeline registers and the word (un-)stackers and therefore greatly simplify the clock tree synthesis. In contrast, the streamer and the control logic require clocking even at the edge of the floorplan as the TCDM and peripheral bus interfaces directly go into registers and FIFOs.
+
+\begin{figure} [h!]
+	\centering
+	\includegraphics[width=0.6\textwidth]{clock_tree.png}
+	\caption{TODO}
+	\label{fig:clock-tree}
+\end{figure}
+
+The timing of the AES HWPE at a clock frequency of \SI{625}{MHz} is -- as indicated by \Cref{tab:results-timing} -- quite tight. The setup times are bounded by the latches in the register file of the control unit. As latches are not synchronous, they can borrow time from a neighbouring timing path given proper timing of the enable signal. This is heavily utilises here. The worst hold paths are in contrast related to some of the inputs as discussed in \Cref{sec:asic:impl:signoff}.
 
 \begin{table}[h]
     \centering
@@ -393,9 +403,54 @@ The Genus synthesis flow replaces the RTL model with generic cells, then finds s
 	\label{tab:results-timing}
 \end{table}
 
-\todo{power consumption: where does the energy go?}
+The power estimation has been conducted tree times: Once with the RTL simulation model of PULPissimo and twice with a test bench for the AES engine only. For PULPissimo, the demo program was run and in the latter case, a singly encryption and a pipelined run of 1024 encryption were tested. The results are summarised in \Cref{tab:results-power}.
 
-\section{Summary and Outlook} \label{sec:summary}
+\begin{table}[h]
+    \centering
+    \begin{tabular}{l|c c c}
+        \toprule
+        Test case & Engine single &  Engine pipeline & AES HWPE \\
+        \midrule
+		Clock frequency [MHz] & 625 & 625 & 50 \\
+		Runtime $\Delta t$ [ns] & 33.6 & 27859 & 1920 \\
+		AES encryptions $n_{ops}$ [mW] & 1 & 1024 & 4 \\	
+		Average power $P_{avg}$ [mW] & 15.521 & 17.989 & 2.757 \\
+		Static power $P_{static}$ [mW] & 0.257 & 0.28 & 0.435 \\
+		Register power [mW] & 7.668 (\SI{49.4}{\percent}) & 8.39 (\SI{46.6}{\percent}) & 1.607 (\SI{58.3}{\percent}) \\
+		Clock tree power [mW] & 1.499 (\SI{9.7}{\percent}) & 1.499 (\SI{8.3}{\percent}) & 0.324 (\SI{11.7}{\percent}) \\	
+		Energy/op $E_{op}$ (\SI{50}{MHz}) [pJ] & - & - & 1324 \\	
+		Energy/op $E_{op}$ (\SI{625}{MHz}) [pJ] & 521 & 489 & 1131 \\
+        \bottomrule
+    \end{tabular}
+	\caption{Power profiling results. Note that the measurement period per encryption is shorter for the engine-only cases as the memory and peripheral bus transactions are not simulated for this subcircuit.}
+	\label{tab:results-power}
+\end{table}
+
+The energy per operation has been calculated as
+
+\begin{equation*}
+	E_{op} = \frac{P_{avg}\,\Delta t}{n_{ops}}.
+\end{equation*}
+
+The following equation was used to project from the test bench running at \SI{50}{MHz} to the nominal frequency of the AES HWPE:
+
+\begin{equation*}
+	P_{avg,\,\SI{625}{MHz}} = \frac{625}{50} \left(P_{avg,\,\SI{50}{MHz}} - P_{static} \right) + P_{static}.
+\end{equation*}
+
+This assumes a constant static power consumption and a dynamic power linearly proportional to the clock frequency. This is a simple model, still the results are useful to have a rough understanding of the HPWE's power consumption. The engine consumes around \SI{500}{pJ} per operation out of the $~\SI{1100}{pJ}$ projection for the HWPE. This roughly matches the area share of the engine. Furthermore, the engine's power consumption is fairly split between combinational logic and registers while the overall system is dominated by sequential power consumption. This matches the area distribution between logic and registers (s. \Cref{tab:results-area}). Therefore, the projection can be used for rough power estimation.
+
+Clearly, the energy consumed per encryption slighlty declines with the number of consecutive encryptions. This is likely due to the shorter runtime due to the pipelining of encryptions and memory operations as discussed in \Cref{sec:improvements:results:performance}.
+
+But when does offloading the encryptions to the HWPE pay off in terms of energy? Executing a RISC-V instruction on a low-power microcontroller SoC consumes \SI{3.3}{pJ}~\cite{Schiavone2018}, \SI{10.2}{pJ}~\cite{Ickes2011}, or \SI{28.5}{pJ}~\cite{Pullini2018}. Note that all these designs are implemented in low-power technology nodes use low operating voltages to minimise their energy consumption. Still, a $4\times\SI{128}{bit}$ AES computation in software takes $18300$ clock cycles cycles (s. \Cref{sec:improvements:results:performance}). Assuming one instruction per clock cycle ($\textrm{IPC}=1$), this yields an energy consumption of \SI{186.7}{nJ} (for the controller presented in~\cite{Ickes2011}). In comparison, the same operation takes \SI{4.5}{nJ} on the AES HWPE.
+
+Of course, no processor will continuously compute encryptions. Thus, the HWPE's static power consumption while idling has to be considered as well. Assuming a clock frequency of \SI{625}{MHz} and an IPC of $1$, the AES HWPE consumes \SI{0.7}{pJ} of static energy per CPU instruction.
+
+% when does it pay off?
+% mention clock gating
+% other power management techniques
+
+\section{Summary} \label{sec:summary}
 
 \clearpage
 \sloppy
