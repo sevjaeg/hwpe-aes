@@ -440,17 +440,56 @@ The following equation was used to project from the test bench running at \SI{50
 
 This assumes a constant static power consumption and a dynamic power linearly proportional to the clock frequency. This is a simple model, still the results are useful to have a rough understanding of the HPWE's power consumption. The engine consumes around \SI{500}{pJ} per operation out of the $~\SI{1100}{pJ}$ projection for the HWPE. This roughly matches the area share of the engine. Furthermore, the engine's power consumption is fairly split between combinational logic and registers while the overall system is dominated by sequential power consumption. This matches the area distribution between logic and registers (s. \Cref{tab:results-area}). Therefore, the projection can be used for rough power estimation.
 
-Clearly, the energy consumed per encryption slighlty declines with the number of consecutive encryptions. This is likely due to the shorter runtime due to the pipelining of encryptions and memory operations as discussed in \Cref{sec:improvements:results:performance}.
+Clearly, the energy consumed per encryption slightly declines with the number of consecutive encryptions. This is likely due to the shorter runtime due to the pipelining of encryptions and memory operations as discussed in \Cref{sec:improvements:results:performance}.
 
 But when does offloading the encryptions to the HWPE pay off in terms of energy? Executing a RISC-V instruction on a low-power microcontroller SoC consumes \SI{3.3}{pJ}~\cite{Schiavone2018}, \SI{10.2}{pJ}~\cite{Ickes2011}, or \SI{28.5}{pJ}~\cite{Pullini2018}. Note that all these designs are implemented in low-power technology nodes use low operating voltages to minimise their energy consumption. Still, a $4\times\SI{128}{bit}$ AES computation in software takes $18300$ clock cycles cycles (s. \Cref{sec:improvements:results:performance}). Assuming one instruction per clock cycle ($\textrm{IPC}=1$), this yields an energy consumption of \SI{186.7}{nJ} (for the controller presented in~\cite{Ickes2011}). In comparison, the same operation takes \SI{4.5}{nJ} on the AES HWPE.
 
-Of course, no processor will continuously compute encryptions. Thus, the HWPE's static power consumption while idling has to be considered as well. Assuming a clock frequency of \SI{625}{MHz} and an IPC of $1$, the AES HWPE consumes \SI{0.7}{pJ} of static energy per CPU instruction.
+Of course, no processor will continuously compute encryptions. Thus, the HWPE's static power consumption while idling has to be considered as well. Assuming a clock frequency of \SI{625}{MHz} and an IPC of $1$, the AES HWPE consumes \SI{0.7}{pJ} of static energy per CPU instruction. If the CPU schedules a $4\times\SI{128}{bit}$ AES encryption after $n_{comp}$ cycles, the break even point w.r.t. to energy can be computed as
 
-% when does it pay off?
-% mention clock gating
-% other power management techniques
+\begin{equation*}
+	E_{cpu} \left(n_{comp} + n_{aes\,cpu} \right) = E_{cpu} \left(n_{comp} + n_{aes\,hwpe} \right) + E_{aes\,hwpe} + E_{static\, hwpe} n_{comp}.
+\end{equation*}
+
+Note that all energies are meant as energy per operation, and $n$ denotes numbers of RISC-V CPU instructions. The equation implies clock gating, as the dynamic power consumption of the HWPE is zero while idling. The following numbers have been obtained:
+
+\begin{itemize}
+	\item $E_{CPU} = \SI{10.2}{pJ}$, 
+	\item $E_{static\, hwpe} = \SI{0.7}{pJ}$,
+	\item $E_{aes\,hwpe} = \SI{4524}{pJ}$,
+	\item $n_{aes\,cpu} = 18300$,
+	\item $n_{aes\,hwpe} = 97$.
+\end{itemize}
+
+Solving the equation for $n_{comp}$ yields \num{259000}. Thus, offloading computations to the AES HWPE pays off if \SI{512}{bits} of data have to be encrypted every \num{259000} CPU instructions. For a clock frequency of \SI{625}{MHz}, this corresponds to a data rate of \SI{1.24}{Mbps} which corresponds to an (uncompressed) $480 \times 360$ pixels RGB image every $3.36$ seconds.
+
+As mentioned, these calculations assume clock gating in the HWPE which is however not implemented. Still, these figures can be considered a pessimistic estimate as typical processors have IPCs beyond 1, as the HWPE was implemented in general purpose logic with nominal operation voltage, and as the CPU can spend more time in a power saving mode as the HWPE brings a significant speed-up.
 
 \section{Summary} \label{sec:summary}
+
+During this project, an open-source AES IP core was integrated into the PULPissimo microcontroller as an hardware processing element. An FPGA demonstration showed the feasibility. Then, an ASIC design flow in a \SI{65}{nm} technology was conducted to evaluate area and power consumption.
+
+Overall, the computation of AES encryptions can well be offloaded to hardware. The trade-off between the hardware and the software implementation is shown in \Cref{tab:conclusion}.
+
+\begin{table}[h]
+    \centering
+    \begin{tabular}{c|c c}
+        \toprule
+        & CPU & HWPE \\
+        \midrule
+		Cycles four encryptions & 18300 & 97 \\
+		Cycles additional encryption & 4500 & 17 \\
+		Relative speed-up & 1  & 264.7 \\
+		Code size [bytes] & 10052 & 9096 \\
+		Area overhead [$\textrm{\micro m}^2$] & 0 & 88864 \\
+		Static power [mW] & 0 & 0.4 \\
+		Energy per encryption [nJ] & 46.6 & 1.1 \\
+        \bottomrule
+    \end{tabular}
+	\caption{Comparison of computing AES CBC operations on PULPissimo's CPU and the AES HWPE.}
+	\label{tab:conclusion}
+\end{table}
+
+Clearly, the HWPE brings significant speed-ups and code size reduction. However, it adds area to the chip and consumes static power even when not calculating encryption. As the HWPE drastically reduces the energy required for an AES CBC encryption, offloading to hardware pays off for a sufficiently high rate of encryptions which is \SI{1.24}{Mbps}.
 
 \clearpage
 \sloppy

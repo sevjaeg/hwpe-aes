@@ -41,8 +41,8 @@ An ASIC implementation flow with a TSMC 65nm technology yields the following res
 - 25509 standard cells
 - Core Area 69420.8 um^2 (83056 um^2 including physical cells)
 - Static power: 0.435 mW
-- Energy per single encryption (datapath only): 467 pJ
-- Energy per pipelined encryption (datapath only, N=1024): 425.2 pJ
+- Energy per single encryption (data path only): 467 pJ
+- Energy per pipelined encryption (data path only, N=1024): 425.2 pJ
 - Estimated energy per single encryption (full HWPE): 1131.4 pJ
 
 ### Hardware vs. Software
@@ -52,14 +52,13 @@ Metric | CPU | HWPE
 Code Size [bytes] | 10052 |  9096
 Execution Time [cycles] | ~18300 | 97
 Cycles per further encryption | ~4500 | 17
-Area Overhead (TSMC65) [um^2] | 0 | 83056
-Energy/Encrpytion [nJ] | ~46 | ~1 (CPU) + 1 (HWPE) = 2
-
-// TODO update
+Area Overhead (TSMC65) [um^2] | 0 | 88864
+Static power [mW] | 0 | 0.4
+Energy/Encryption [nJ] | 46.6 | 1.1
 
 Code sizes and execution times were measured with a demo program encrypting four 128-bit words both on the CPU and the HWPE.
 
-The energy assumes a (quite optimistic) 10 pJ/operation CPU running at 650 MHz.
+The energy assumes a (quite optimistic) 10.2 pJ/operation CPU running at 650 MHz.
 
 ## Prerequisites
 
