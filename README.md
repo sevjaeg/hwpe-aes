@@ -52,7 +52,7 @@ Metric | CPU | HWPE
 Code Size [bytes] | 10052 |  9096
 Execution Time [cycles] | ~18300 | 97
 Cycles per further encryption | ~4500 | 17
-Area Overhead (TSMC65) [um^2] | 0 | 88864
+Area Overhead (TSMC65) [um^2] | 0 | 83056 
 Static power [mW] | 0 | 0.4
 Energy/Encryption [nJ] | 46.6 | 1.1
 
