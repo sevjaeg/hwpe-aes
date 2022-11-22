@@ -11,3 +11,5 @@ build/
 # LaTeX artifacts
 *.bak
 *.tmp
+
+util/
